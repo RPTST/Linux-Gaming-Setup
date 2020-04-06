@@ -63,3 +63,7 @@ class Hardware:
                     for element in splitted:
                         for element in companys:
                             return element
+                elif line.strip().startswith("OpenGL vendor string"):
+                    for company in companys:
+                        if company in line:
+                            return company
