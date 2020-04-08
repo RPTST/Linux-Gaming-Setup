@@ -46,8 +46,7 @@ class Arch:
         print("Returning steam package.\n")
         return ['steam', 'steam-native-runtime', 'proton-ge-custom']
 
-    @staticmethod
-    def vkbasalt(build=False):
+    def vkbasalt(self, build=False):
         if not build:
             print("downloading vkbasalt and installing necressary dependencies.\n")
             yield ['glslang', 'vulkan-tools', 'lib32-libx11', 'libx11']
@@ -59,6 +58,7 @@ class Arch:
                 'releases/latest/download/vkbasalt.tar.gz',
                 '-O', '~/Programs'
             ))
+            self.after['vkbasalt'][0] = True
         else:
             # configuration https://www.youtube.com/watch?v=6p1SNBy4P74&t=638s
             print("Building and configuring it like Chris Titus Tech did.\n")
@@ -78,18 +78,24 @@ class Arch:
         print("Returning gamemode packages")
         return ['gamemode-git', 'lib32-gamemode-git']
 
-    @staticmethod
-    def command(to_install):
+    def command(self, to_install):
         command = [
             'yay', '-S', '--redownloadall', '--sudoloop',
             '--nocleanmenu', '--nodiffmenu', '--noeditmenu'
             ]
         programs = {
             'lutris': Arch.lutris, 'steam': Arch.steam,
-            'vkbasalt': Arch.vkbasalt, 'gamemode': Arch.gamemode
+            'vkbasalt': self.vkbasalt, 'gamemode': Arch.gamemode
             }
         for program in to_install:
             program_packages = programs.get(program)()
             for package in program_packages:
                 command.insert(2, package)
         return command
+    
+    def install(self, command):
+        p = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        p.stdin.write(b'y\n')
+        for key in self.after:
+            if self.after.get(key)[0]:
+                self.after.get(key)[1](build=True)
