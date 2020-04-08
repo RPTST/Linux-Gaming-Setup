@@ -45,3 +45,6 @@ class Arch:
                     if line.startswith('effects ='):
                         config[i] = 'effects = smaa:smaa:cas'
                 FileObj.writelines(config)
+    def gamemode():
+        print("Returning gamemode packages")
+        return ['gamemode-git', 'lib32-gamemode-git']
