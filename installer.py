@@ -1,6 +1,6 @@
 import subprocess
 import os
-import time
+
 
 # Lutris
 """
@@ -27,10 +27,10 @@ Returns packages for this awesome program made by
 FeralGaming which adds some extra performance/fps
 """
 
-# Create install script
+# Create ainstall script
 """
-Creates the install.sh script
-to install all programs & required packages
+Creates an install script
+to install selected programs & required packages
 """
 
 
@@ -51,33 +51,41 @@ class All:
         # configuration https://www.youtube.com/watch?v=6p1SNBy4P74&t=638s
 
         print("downloading vkBasalt.tar.gz")
-        subprocess.Popen((
-            'wget',
-            'https://github.com/DadSchoorse/vkbasalt/' +
-            'releases/latest/download/vkbasalt.tar.gz',
-            '-P', f'{self.current_folder}tmp/'),
+        subprocess.Popen(
+            (
+                'wget',
+                'https://github.com/DadSchoorse/vkbasalt/' +
+                'releases/latest/download/vkbasalt.tar.gz',
+                '-P', f'{self.current_folder}tmp/'),
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
             ).wait()
 
         print("Extracting the package to ./tmp & removing .tar.gz fle")
-        subprocess.Popen((
-            'file-roller', f'--extract-to={self.current_folder}tmp/', f'{self.current_folder}tmp/vkbasalt.tar.gz'),
+        subprocess.Popen(
+            (
+
+                'file-roller',
+                f'--extract-to={self.current_folder}tmp/',
+                f'{self.current_folder}tmp/vkbasalt.tar.gz'),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
             ).wait()
 
         print("Building and configuring it like Chris Titus Tech did.\n")
-        subprocess.Popen((
-            'make', f'{self.current_folder}tmp/vkBasalt',
-            'install'),
+        subprocess.Popen(
+            (
+                'make', f'{self.current_folder}tmp/vkBasalt',
+                'install'),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
-            ).wait()
-        with open(f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf', 'r+') as config_file:
+                ).wait()
+        with open(
+                f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf',
+                'r+') as config_file:
             config = config_file.readlines()
             for i, line in enumerate(config):
                 if line.startswith('effects ='):
@@ -175,10 +183,8 @@ class Arch:
             Returns packages Vulkan packages for Intel igpus
             """
             return [
-                'sudo',
-                'pacman',
-                '-S',
-                'lib32-mesa',
+                'sudo', 'pacman',
+                '-S', 'lib32-mesa',
                 'vulkan-intel',
                 'lib32-vulkan-intel',
                 'vulkan-icd-loader',
@@ -241,11 +247,12 @@ class Arch:
 
     def last(self):
         for key, value in self.after.items():
-            if value[0] == True:
+            if value[0]:
                 print(f'{key.capitalize()} initialized.')
                 execute_value = value[1]
                 class_obj = execute_value[0]()
                 getattr(class_obj, key)()
+
 
 class Ubuntu:
     """Installer for Ubuntu based distros"""
@@ -253,7 +260,7 @@ class Ubuntu:
         self.lts = lts
         self._packages = []
         self.ppa = []
-        self.after = {'vkbasalt': [False, All().vkbasalt]} #fixme
+        self.after = {'vkbasalt': [False, All]}
 
     def lutris(self):
         print("Adding lutris ppa")
@@ -267,3 +274,9 @@ class Fedora:
     def __init__(self):
         self._packages = []
         self._commands = []
+
+    def lutris(self):
+        print("Returning packages needed for lutris app.")
+
+    def steam(self):
+        print("Returning packages needed for steam app.")
