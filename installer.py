@@ -1,5 +1,6 @@
 import subprocess
-
+import os
+import time
 
 # Lutris
 """
@@ -26,7 +27,7 @@ Returns packages for this awesome program made by
 FeralGaming which adds some extra performance/fps
 """
 
-#C reate install script
+# Create install script
 """
 Creates the install.sh script
 to install all programs & required packages
@@ -34,45 +35,68 @@ to install all programs & required packages
 
 
 class All:
-    def __init__():
+    """Installer where distro doesnt matter"""
+    def __init__(self):
+        self.current_folder = (
+            f'{os.path.dirname(os.path.abspath(__file__))}/'
+            )
         subprocess.Popen(
-            ('mkdir', '~/Programs'),
+            ('mkdir', f'{self.current_folder}tmp'),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
             )
 
-    @staticmethod
-    def vkbasalt():
+    def vkbasalt(self):
         # configuration https://www.youtube.com/watch?v=6p1SNBy4P74&t=638s
+
         print("downloading vkBasalt.tar.gz")
         subprocess.Popen((
             'wget',
             'https://github.com/DadSchoorse/vkbasalt/' +
             'releases/latest/download/vkbasalt.tar.gz',
-            '-O', '~/Programs'
-        ))
+            '-P', f'{self.current_folder}tmp/'),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
+
+        print("Extracting the package to ./tmp & removing .tar.gz fle")
+        subprocess.Popen((
+            'file-roller', f'--extract-to={self.current_folder}tmp/', f'{self.current_folder}tmp/vkbasalt.tar.gz'),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
+
         print("Building and configuring it like Chris Titus Tech did.\n")
         subprocess.Popen((
-            'tar', '-xzvf', '-C', '~/Programs', '&&',
-            'rm', '~/Programs/vkbasalt.tar.gz'
-            ))
-        subprocess.Popen((
-            'cd', '~/Programs/vkbasalt', '&&', 'make', 'install'
-            ))
-        with open('~/Programs/vkbasalt/config', 'r') as config_file:
+            'make', f'{self.current_folder}tmp/vkBasalt',
+            'install'),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
+        with open(f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf', 'r+') as config_file:
             config = config_file.readlines()
             for i, line in enumerate(config):
                 if line.startswith('effects ='):
                     config[i] = 'effects = smaa:smaa:cas'
             config_file.writelines(config)
+            config_file.close()
+
+        print("Removing folder ./tmp")
+        subprocess.Popen((
+            'rm', '-r', f'{self.current_folder}tmp/'
+        ))
 
 
 class Arch:
+    """Installer for Arch based distros"""
     def __init__(self):
         self._commands = []
         self._packages = []
-        self._after = {'vkbasalt': [False, All.vkbasalt]}
+        self.after = {'vkbasalt': [False, [All, All.vkbasalt]]}
         self._ypackage = None
         self._yay()
         if not self._ypackage:
@@ -178,19 +202,17 @@ class Arch:
                 ]:
             self._packages.append(steam_package)
 
-    def vkbasalt(self, build=False):
-        if not build:
-            print(
-                "Returning necressary dependencies" +
-                "for vkBasalt to work."
-                )
-            for vkbasalt_package in [
-                    'glslang', 'vulkan-tools',
-                    'lib32-libx11', 'libx11'
+    def vkbasalt(self):
+        print(
+            "Returning necressary dependencies " +
+            "for vkBasalt to work."
+            )
+        for vkbasalt_package in [
+                'glslang', 'vulkan-tools',
+                'lib32-libx11', 'libx11'
                 ]:
-                self._packages.append(vkbasalt_package)
-            print("Downloading vkbasalt to ~/Programs")
-            self._after['vkbasalt'][0] = True
+            self._packages.append(vkbasalt_package)
+        self.after['vkbasalt'][0] = True
 
     def gamemode(self):
         print("Returning gamemode packages")
@@ -217,13 +239,21 @@ class Arch:
             for command in self._commands:
                 script_file.write(f"{' '.join(command)}\n")
 
+    def last(self):
+        for key, value in self.after.items():
+            if value[0] == True:
+                print(f'{key.capitalize()} initialized.')
+                execute_value = value[1]
+                class_obj = execute_value[0]()
+                getattr(class_obj, key)()
 
 class Ubuntu:
+    """Installer for Ubuntu based distros"""
     def __init__(self, lts):
         self.lts = lts
         self._packages = []
         self.ppa = []
-        self.after = {'vkbasalt': [False, All.vkbasalt]}
+        self.after = {'vkbasalt': [False, All().vkbasalt]} #fixme
 
     def lutris(self):
         print("Adding lutris ppa")
@@ -231,3 +261,9 @@ class Ubuntu:
 
     def steam(self):
         self._packages.append('steam-installer')
+
+
+class Fedora:
+    def __init__(self):
+        self._packages = []
+        self._commands = []
