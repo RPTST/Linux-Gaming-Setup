@@ -1,5 +1,7 @@
 import subprocess
 import os
+import sys
+import distro
 
 
 # Lutris
@@ -274,9 +276,52 @@ class Fedora:
     def __init__(self):
         self._packages = []
         self._commands = []
+        self._fedora_ver = list(distro.linux_distribution())[1]
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
+        if self._fedora_ver == '31':
+            for command in (
+                    'dnf config-manager --add-repo' +
+                    'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'):
+                subprocess.Popen(
+                    tuple(command.split()),
+                    stdout=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL).wait()
+            for package in (
+                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
+                    'winetricks', 'lutris'):
+                self._packages.append(package)
+
+        elif self._fedora_ver == '30':
+            for command in (
+                    'dnf config-manager --add-repo' +
+                    'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'):
+                subprocess.Popen(
+                    tuple(command.split()),
+                    stdout=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL).wait()
+            for package in (
+                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
+                    'winetricks', 'lutris'):
+                self._packages.append(package)
+
+        else:
+            print(
+                "Older version of Fedora than Fedora 30 or 31 detected.\n",
+                "Please refer to https://wiki.winehq.org/Fedora")
+            sys.exit()
 
     def steam(self):
-        print("Returning packages needed for steam app.")
+        print("Adding the steam package")
+        self._packages.append('steam')
+        for command in (
+                'dnf install -y fedora-workstation-repositories',
+                'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
+            subprocess.Popen(
+                tuple(command.split()),
+                stdout=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL).wait()
