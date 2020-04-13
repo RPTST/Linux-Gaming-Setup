@@ -338,11 +338,9 @@ class Fedora:
             command = (
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
-                )
+                ).split()
             subprocess.Popen(
-                tuple(
-                    command.split()
-                    ),
+                command,
                 stdout=subprocess.DEVNULL,
                 stdin=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
