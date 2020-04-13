@@ -328,6 +328,7 @@ class Fedora:
     """
     def __init__(self):
         self._packages = []
+        self._top_commands = []
         self._commands = []
         self._fedora_ver = list(distro.linux_distribution())[1]
         self._after = {'vkbasalt': [False, All]}
@@ -335,35 +336,22 @@ class Fedora:
     def lutris(self):
         print("Returning packages needed for lutris app.")
         if self._fedora_ver == '31':
-            command = (
-                'dnf config-manager --add-repo' +
+            self._top_commands.append(
+                'dnf config-manager --add-repo ' +
                 'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
-                ).split()
-            subprocess.Popen(
-                command,
-                stdout=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-                ).wait()
+                )
             for package in (
-                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
+                    'winehq-stable', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
                 self._packages.append(package)
 
         elif self._fedora_ver == '30':
-            for command in (
-                    'dnf config-manager --add-repo' +
-                    'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'):
-                subprocess.Popen(
-                    tuple(
-                        command.split()
-                        ),
-                    stdout=subprocess.DEVNULL,
-                    stdin=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                    ).wait()
+            self._top_commands.append(
+                'dnf config-manager --add-repo ' +
+                'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'
+                )
             for package in (
-                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
+                    'winehq-stable', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
                 self._packages.append(package)
 
@@ -379,14 +367,7 @@ class Fedora:
         for command in (
                 'dnf install -y fedora-workstation-repositories',
                 'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
-            subprocess.Popen(
-                tuple(
-                    command.split()
-                    ),
-                stdout=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-                ).wait()
+            self._top_commands.append(command)
 
     def vkbasalt(self):
         self._after['vkbasalt'][0] = True
@@ -406,7 +387,9 @@ class Fedora:
         """
         Creates the dnf install command
         """
-        dnf_command = ['dnf', 'install', '-y']
+        dnf_command = [
+            'dnf', 'install', '--allowerasing',
+            '--skip-broken', '-y']
         for package in self._packages:
             dnf_command.insert(2, package)
         self._commands.append(dnf_command)
@@ -415,5 +398,13 @@ class Fedora:
         self._dnf_install_command()
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
+            for top_command in self._top_commands:
+                script_file.write(top_command + '\n')
             for command in self._commands:
                 script_file.write(f"{' '.join(command)}\n")
+
+    def last(self):
+        for key, value in self._after.items():
+            if value[0]:
+                class_obj = value[1]()
+                getattr(class_obj, key)()
