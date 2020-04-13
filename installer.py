@@ -146,7 +146,9 @@ class All:
 
 
 class Arch:
-    """Installer for Arch based distros"""
+    """
+    Arch based install class
+    """
     def __init__(self):
         self._commands = []
         self._packages = []
@@ -303,7 +305,9 @@ class Arch:
 
 
 class Ubuntu:
-    """Installer for Ubuntu based distros"""
+    """
+    Ubuntu install class
+    """
     def __init__(self, lts):
         self.lts = lts
         self._packages = []
@@ -319,6 +323,9 @@ class Ubuntu:
 
 
 class Fedora:
+    """
+    Fedora install class
+    """
     def __init__(self):
         self._packages = []
         self._commands = []
@@ -396,3 +403,19 @@ class Fedora:
                 'meson', 'systemd-devel',
                 'pkg-config', 'git dbus-devel'):
             self._packages.append(package)
+
+    def _dnf_install_command(self):
+        """
+        Creates the dnf install command
+        """
+        dnf_command = ['dnf', 'install', '-y']
+        for package in self._packages:
+            dnf_command.insert(2, package)
+        self._commands.append(dnf_command)
+
+    def create_install_script(self):
+        self._dnf_install_command()
+        with open('./install.sh', 'a') as script_file:
+            script_file.write("echo 'Install script executed'\n")
+            for command in self._commands:
+                script_file.write(f"{' '.join(command)}\n")
