@@ -39,18 +39,28 @@ to install selected programs & required packages
 class All:
     """Installer where distro doesnt matter"""
     def __init__(self):
-        self.current_folder = (
-            f'{os.path.dirname(os.path.abspath(__file__))}/'
-            )
+        self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
+        self.programs_folder = f'/home/{os.getlogin()}/Programs'
+
         subprocess.Popen(
-            ('mkdir', f'{self.current_folder}tmp'),
+            (
+                'mkdir', f'{self.current_folder}tmp'
+                ),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
-            )
+            ).wait()
+        subprocess.Popen(
+            (
+                'mkdir', f'/home/{os.getlogin()}/Programs'
+                ),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
 
     def vkbasalt(self):
-        # configuration https://www.youtube.com/watch?v=6p1SNBy4P74&t=638s
+        # configuration https://youtu.be/6p1SNBy4P74?t=875
 
         print("downloading vkBasalt.tar.gz")
         subprocess.Popen(
@@ -69,7 +79,7 @@ class All:
             (
 
                 'file-roller',
-                f'--extract-to={self.current_folder}tmp/',
+                f'--extract-to={self.programs_folder}',
                 f'{self.current_folder}tmp/vkbasalt.tar.gz'),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
@@ -79,12 +89,13 @@ class All:
         print("Building and configuring it like Chris Titus Tech did.\n")
         subprocess.Popen(
             (
-                'make', f'{self.current_folder}tmp/vkBasalt',
-                'install'),
+                'make', f'{self.programs_folder}tmp/vkBasalt',
+                'install'
+                ),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
-                ).wait()
+            ).wait()
         with open(
                 f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf',
                 'r+') as config_file:
@@ -96,9 +107,42 @@ class All:
             config_file.close()
 
         print("Removing folder ./tmp")
-        subprocess.Popen((
-            'rm', '-r', f'{self.current_folder}tmp/'
-        ))
+        subprocess.Popen(
+            (
+                'rm', '-r', f'{self.current_folder}tmp/'
+                ),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
+
+    def gamemode(self):
+        gamemode_path = f'{self.programs_folder}/Gamemode'
+        link = 'https://github.com/FeralInteractive/gamemode.git'
+
+        print("Cloning Gamemode.")
+        subprocess.Popen(
+            (
+                'cd', gamemode_path, '&&',
+                'git', 'clone', link, '&&',
+                'release=$( git tag | tail -1)', '&&',
+                'git', 'checkout', '$release;'
+                ),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            shell=True
+            ).wait()
+
+        print("Building gamemode.")
+        subprocess.Popen(
+            (
+                f'.{gamemode_path}/bootstrap.sh'
+                ),
+            stdout=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+            ).wait()
 
 
 class Arch:
@@ -106,7 +150,7 @@ class Arch:
     def __init__(self):
         self._commands = []
         self._packages = []
-        self.after = {'vkbasalt': [False, [All, All.vkbasalt]]}
+        self._after = {'vkbasalt': [False, All]}
         self._ypackage = None
         self._yay()
         if not self._ypackage:
@@ -220,11 +264,15 @@ class Arch:
                 'lib32-libx11', 'libx11'
                 ]:
             self._packages.append(vkbasalt_package)
-        self.after['vkbasalt'][0] = True
+        self._after['vkbasalt'][0] = True
 
     def gamemode(self):
         print("Returning gamemode packages")
-        for gamemode_package in ['gamemode-git', 'lib32-gamemode-git']:
+        for gamemode_package in [
+                'gamemode-git', 'lib32-gamemode-git',
+                'meson', 'systemd-devel',
+                'pkg-config git', 'dbus-devel'
+                ]:
             self._packages.append(gamemode_package)
 
     def _yay_install_cmd(self):
@@ -248,11 +296,9 @@ class Arch:
                 script_file.write(f"{' '.join(command)}\n")
 
     def last(self):
-        for key, value in self.after.items():
+        for key, value in self._after.items():
             if value[0]:
-                print(f'{key.capitalize()} initialized.')
-                execute_value = value[1]
-                class_obj = execute_value[0]()
+                class_obj = value[1]()
                 getattr(class_obj, key)()
 
 
@@ -262,7 +308,7 @@ class Ubuntu:
         self.lts = lts
         self._packages = []
         self.ppa = []
-        self.after = {'vkbasalt': [False, All]}
+        self._after = {'vkbasalt': [False, All]}
 
     def lutris(self):
         print("Adding lutris ppa")
@@ -277,18 +323,23 @@ class Fedora:
         self._packages = []
         self._commands = []
         self._fedora_ver = list(distro.linux_distribution())[1]
+        self._after = {'vkbasalt': [False, All]}
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
         if self._fedora_ver == '31':
-            for command in (
-                    'dnf config-manager --add-repo' +
-                    'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'):
-                subprocess.Popen(
-                    tuple(command.split()),
-                    stdout=subprocess.DEVNULL,
-                    stdin=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL).wait()
+            command = (
+                'dnf config-manager --add-repo' +
+                'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
+                )
+            subprocess.Popen(
+                tuple(
+                    command.split()
+                    ),
+                stdout=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+                ).wait()
             for package in (
                     'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
@@ -299,10 +350,13 @@ class Fedora:
                     'dnf config-manager --add-repo' +
                     'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'):
                 subprocess.Popen(
-                    tuple(command.split()),
+                    tuple(
+                        command.split()
+                        ),
                     stdout=subprocess.DEVNULL,
                     stdin=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL).wait()
+                    stderr=subprocess.DEVNULL
+                    ).wait()
             for package in (
                     'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
@@ -321,7 +375,24 @@ class Fedora:
                 'dnf install -y fedora-workstation-repositories',
                 'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
             subprocess.Popen(
-                tuple(command.split()),
+                tuple(
+                    command.split()
+                    ),
                 stdout=subprocess.DEVNULL,
                 stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL).wait()
+                stderr=subprocess.DEVNULL
+                ).wait()
+
+    def vkbasalt(self):
+        self._after['vkbasalt'][0] = True
+        for package in (
+                'vulkan-tools', 'glslang', 'libX11-devel',
+                'glibc-devel.i686', 'libstdc++-devel.i686',
+                'spirv-tools', 'libX11-devel.i686'):
+            self._packages.append(package)
+
+    def gamemode(self):
+        for package in (
+                'meson', 'systemd-devel',
+                'pkg-config', 'git dbus-devel'):
+            self._packages.append(package)
