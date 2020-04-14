@@ -413,3 +413,16 @@ class Fedora:
             if value[0]:
                 class_obj = value[1]()
                 getattr(class_obj, key)()
+
+class Solus:
+    def __init__(self):
+        self._packages = []
+        self._commands = []
+        self._top_commands = []
+        self._after = {'vkbasalt': [False, All]}
+    
+    def lutris(self):
+        for package in [
+                'wine', 'wine-devel',
+                'wine-32bit-devel', 'winetricks']:
+            self._packages.append(package)
