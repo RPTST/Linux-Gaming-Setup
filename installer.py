@@ -436,6 +436,7 @@ class Solus:
             self._packages.append(package)
 
     def vkbasalt(self):
+        self._after['vkbasalt'][0] = True
         for package in [
                 'vulkan-tools', 'glslang', 'libX11-devel',
                 'glibc-devel', 'libstdc++', 'spirv-tools'
