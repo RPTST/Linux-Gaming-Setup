@@ -1,6 +1,5 @@
 import subprocess
 import os
-import sys
 import distro
 
 
@@ -329,39 +328,27 @@ class Fedora:
     def __init__(self):
         self._packages = []
         self._commands = []
+        self._commands_top = []
         self._fedora_ver = list(distro.linux_distribution())[1]
         self._after = {'vkbasalt': [False, All]}
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
         if self._fedora_ver == '31':
-            command = (
+            self._commands_top.append(
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
-                ).split()
-            subprocess.Popen(
-                command,
-                stdout=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-                ).wait()
+                )
             for package in (
                     'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
                 self._packages.append(package)
 
         elif self._fedora_ver == '30':
-            for command in (
-                    'dnf config-manager --add-repo' +
-                    'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'):
-                subprocess.Popen(
-                    tuple(
-                        command.split()
-                        ),
-                    stdout=subprocess.DEVNULL,
-                    stdin=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                    ).wait()
+            self._commands_top.append(
+                'dnf config-manager --add-repo' +
+                'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'
+                )
             for package in (
                     'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
@@ -369,9 +356,11 @@ class Fedora:
 
         else:
             print(
-                "Older version of Fedora than Fedora 30 or 31 detected.\n",
-                "Please refer to https://wiki.winehq.org/Fedora")
-            sys.exit()
+                "\n#########################################################"
+                "\nOlder version of Fedora than Fedora 30 or 31 detected.",
+                "\nPlease refer to https://wiki.winehq.org/Fedora ."
+                "\n#########################################################"
+                )
 
     def steam(self):
         print("Adding the steam package")
@@ -379,14 +368,7 @@ class Fedora:
         for command in (
                 'dnf install -y fedora-workstation-repositories',
                 'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
-            subprocess.Popen(
-                tuple(
-                    command.split()
-                    ),
-                stdout=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-                ).wait()
+            self._commands_top.append(command)
 
     def vkbasalt(self):
         self._after['vkbasalt'][0] = True
@@ -397,6 +379,9 @@ class Fedora:
             self._packages.append(package)
 
     def gamemode(self):
+        print(
+            "Adding packages nesressary for building gamemode."
+            )
         for package in (
                 'meson', 'systemd-devel',
                 'pkg-config', 'git dbus-devel'):
@@ -406,6 +391,7 @@ class Fedora:
         """
         Creates the dnf install command
         """
+        print("Creating the dnf install command")
         dnf_command = ['dnf', 'install', '-y']
         for package in self._packages:
             dnf_command.insert(2, package)
@@ -413,7 +399,17 @@ class Fedora:
 
     def create_install_script(self):
         self._dnf_install_command()
+        print("Creating the install script")
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            for command in self._commands:
-                script_file.write(f"{' '.join(command)}\n")
+            for command in set(self._commands_top):
+                script_file.write(' '.join(command) + '\n')
+            for command in set(self._commands):
+                script_file.write(' '.join(command) + '\n')
+        print("Install script created !")
+
+    def last(self):
+        for key, value in self._after.items():
+            if value[0]:
+                class_obj = value[1]()
+                getattr(class_obj, key)()
