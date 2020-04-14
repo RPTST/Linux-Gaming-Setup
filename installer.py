@@ -328,14 +328,14 @@ class Fedora:
     def __init__(self):
         self._packages = []
         self._commands = []
-        self._commands_top = []
+        self._top_commands = []
         self._fedora_ver = list(distro.linux_distribution())[1]
         self._after = {'vkbasalt': [False, All]}
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
         if self._fedora_ver == '31':
-            self._commands_top.append(
+            self._top_commands.append(
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
                 )
@@ -345,7 +345,7 @@ class Fedora:
                 self._packages.append(package)
 
         elif self._fedora_ver == '30':
-            self._commands_top.append(
+            self._top_commands.append(
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'
                 )
@@ -368,7 +368,7 @@ class Fedora:
         for command in (
                 'dnf install -y fedora-workstation-repositories',
                 'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
-            self._commands_top.append(command)
+            self._top_commands.append(command)
 
     def vkbasalt(self):
         self._after['vkbasalt'][0] = True
@@ -387,7 +387,7 @@ class Fedora:
                 'pkg-config', 'git dbus-devel'):
             self._packages.append(package)
 
-    def _dnf_install_command(self):
+    def _dnf_install_cmd(self):
         """
         Creates the dnf install command
         """
@@ -398,11 +398,11 @@ class Fedora:
         self._commands.append(dnf_command)
 
     def create_install_script(self):
-        self._dnf_install_command()
+        self._dnf_install_cmd()
         print("Creating the install script")
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            for command in set(self._commands_top):
+            for command in set(self._top_commands):
                 script_file.write(' '.join(command) + '\n')
             for command in set(self._commands):
                 script_file.write(' '.join(command) + '\n')
@@ -414,15 +414,50 @@ class Fedora:
                 class_obj = value[1]()
                 getattr(class_obj, key)()
 
+
 class Solus:
     def __init__(self):
         self._packages = []
         self._commands = []
-        self._top_commands = []
         self._after = {'vkbasalt': [False, All]}
-    
+
     def lutris(self):
+        print("Adding lutris packages")
         for package in [
-                'wine', 'wine-devel',
-                'wine-32bit-devel', 'winetricks']:
+                'wine', 'wine-devel', 'wine-32bit-devel', 'winetricks',
+                'vulkan, vulkan-32bit, vulkan-headers'
+                ]:
             self._packages.append(package)
+
+    def steam(self):
+        for package in [
+                'steam', 'linux-steam-integration'
+                ]:
+            self._packages.append(package)
+
+    def vkbasalt(self):
+        for package in [
+                'vulkan-tools', 'glslang', 'libX11-devel',
+                'glibc-devel', 'libstdc++', 'spirv-tools'
+                ]:
+            self._packages.append(package)
+
+    def gamemode(self):
+        for package in [
+                'gamemode', 'gamemode-32bit']:
+            self._packages.append(package)
+
+    def _eopkg_install_cmd(self):
+        command = ['eopkg', 'install', '-y']
+        for package in self._packages:
+            command.insert(2, package)
+        self._commands.append(' '.join(command) + '\n')
+
+    def create_install_script(self):
+        self._eopkg_install_cmd()
+        print("Creating the install script")
+        with open('./install.sh', 'a') as script_file:
+            script_file.write("echo 'Install script executed'\n")
+            for command in set(self._commands):
+                script_file.write(' '.join(command) + '\n')
+        print("Install script created !")
