@@ -1,7 +1,10 @@
 import subprocess
 import os
+import shutil
+import tarfile
+import urllib
+import requests
 import distro
-
 
 # Lutris
 """
@@ -39,51 +42,23 @@ class All:
     """Installer where distro doesnt matter"""
     def __init__(self):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
-        self.programs_folder = f'/home/{os.getlogin()}/Programs'
+        self.programs_folder = os.path.expanduser('~/Programs')
+        os.mkdir(f'{self.programs_folder}/tmp')
+        os.mkdir(os.path.expanduser('~/Programs'))
 
-        subprocess.Popen(
-            (
-                'mkdir', f'{self.current_folder}tmp'
-                ),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-            ).wait()
-        subprocess.Popen(
-            (
-                'mkdir', f'/home/{os.getlogin()}/Programs'
-                ),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-            ).wait()
+    def download_extract(self, link, path):
+        with urllib.request.urlopen(link) as file:
+            with tarfile.open(fileobj=file, mode='r|*') as tar_file:
+                tar_file.extractall(path)
 
     def vkbasalt(self):
         # configuration https://youtu.be/6p1SNBy4P74?t=875
-
-        print("downloading vkBasalt.tar.gz")
-        subprocess.Popen(
-            (
-                'wget',
-                'https://github.com/DadSchoorse/vkbasalt/' +
-                'releases/latest/download/vkbasalt.tar.gz',
-                '-P', f'{self.current_folder}tmp/'),
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-            ).wait()
-
-        print("Extracting the package to ./tmp & removing .tar.gz fle")
-        subprocess.Popen(
-            (
-
-                'file-roller',
-                f'--extract-to={self.programs_folder}',
-                f'{self.current_folder}tmp/vkbasalt.tar.gz'),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-            ).wait()
+        download_link = (
+            "https://github.com/DadSchoorse/vkbasalt/" +
+            "releases/latest/download/vkbasalt.tar.gz"
+            )
+        print("downloading vkBasalt.tar.gz and extracting it to ~/Programs")
+        self.download_extract(download_link, self.programs_folder)
 
         print("Building and configuring it like Chris Titus Tech did.\n")
         subprocess.Popen(
@@ -95,9 +70,11 @@ class All:
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
             ).wait()
+
         with open(
                 f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf',
-                'r+') as config_file:
+                'r+'
+                ) as config_file:
             config = config_file.readlines()
             for i, line in enumerate(config):
                 if line.startswith('effects ='):
@@ -106,14 +83,7 @@ class All:
             config_file.close()
 
         print("Removing folder ./tmp")
-        subprocess.Popen(
-            (
-                'rm', '-r', f'{self.current_folder}tmp/'
-                ),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-            ).wait()
+        shutil.rmtree(f'{self.current_folder}/tmp/vkBasalt')
 
     def gamemode(self):
         gamemode_path = f'{self.programs_folder}/Gamemode'
@@ -143,6 +113,18 @@ class All:
             stderr=subprocess.DEVNULL
             ).wait()
 
+    def proton_ge(self):
+        get_link = (
+            'https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=1'
+            )
+        proton_path = os.path.expanduser('~/.local/share/Steam/compatibilitytools.d')
+
+        print("Getting the download link for the latest proton-ge release")
+        download_link = (
+            requests.get(get_link).json()[0].get('assets')[0].get('browser_download_url')
+            )
+        print("Downloading the latest proton-ge release.")
+        self.download_extract(download_link, proton_path)
 
 class Arch:
     """
@@ -150,6 +132,7 @@ class Arch:
     """
     def __init__(self):
         self._commands = []
+        self._top_commands = []
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
         self._ypackage = None
@@ -171,10 +154,10 @@ class Arch:
                 print("Yay found !")
                 break
 
-    def lutris(self, gpu_brand):
-        self._commands.append([
+    def lutris(self, gpu_vendor):
+        self._top_commands.append(
             "python -c 'import enableMultilib" +
-            ";enableMultilib.pacmanConf()'"])
+            ";enableMultilib.pacmanConf()'")
         print("Trying to enable multilib in pacman.conf\n")
 
         print("Returning wine & lutris packages\n")
@@ -197,8 +180,7 @@ class Arch:
             ]
 
         print("checking gpu.")
-        print(f"Detected an {gpu_brand} gpu.")
-        print(f"Returning packages for vulkan support on {gpu_brand} gpu")
+        print(f"Returning packages for vulkan support on {gpu_vendor} gpu")
 
         def amd_vulkan():
             """
@@ -242,7 +224,7 @@ class Arch:
             'intel': intel_vulkan,
             'nvidia': nvidia_vulkan
             }
-        for vulkan_package in vulkan.get(gpu_brand)():  # for vulkan support
+        for vulkan_package in vulkan.get(gpu_vendor)():  # for vulkan support
             lutris_packages.append(vulkan_package)  # packages for gpu
             for package in lutris_packages:
                 self._packages.append(package)
@@ -250,8 +232,7 @@ class Arch:
     def steam(self):
         print("Returning steam package.\n")
         for steam_package in [
-                'steam-native-runtime',
-                'proton-ge-custom', 'steam'
+                'steam-native-runtime', 'steam'
                 ]:
             self._packages.append(steam_package)
 

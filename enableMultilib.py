@@ -1,10 +1,12 @@
 import os
-
+import shutil
 
 def pacmanConf():
+    path = '/etc/pacman.conf'
     print("\nenableMultilib.py executed.")
     try:
-        with open('/etc/pacman.conf', 'r') as file:
+        shutil.copyfile(src=path, dst=path + '.backup')
+        with open(path, 'r') as file:
             data = file.readlines()
         for i, line in enumerate(data):
             if line.startswith("#[multilib]"):
@@ -27,7 +29,7 @@ def pacmanConf():
                         """)
                 break
 
-        with open('/etc/pacman.conf', 'w') as file:
+        with open(path, 'w') as file:
             file.writelines(data)
     except PermissionError:
         print("enableMultilib.py wasnt executed as root !\n\n")
