@@ -471,6 +471,10 @@ class Ubuntu:
                     self._top_commands.append(
                         'sudo apt install --install-recommends winehq-stable')
 
+        self._top_commands.append(
+            'apt install --install-recommends ' +
+            'winehq-stable wine-stable wine-stable-i386 wine-stable-amd64'
+            )
         for package in [
                 'libgnutls30:i386', 'libldap-2.4-2:i386',
                 'libgpg-error0:i386', 'libxml2:i386',
