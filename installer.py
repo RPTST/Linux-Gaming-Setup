@@ -131,7 +131,6 @@ class Arch:
     Arch based install class
     """
     def __init__(self):
-        self._commands = []
         self._top_commands = []
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
@@ -268,14 +267,15 @@ class Arch:
             ]
         for package in self._packages:
             command.insert(2, package)
-        self._commands.append(command)
+        return command
 
     def create_install_script(self):
-        self._yay_install_cmd()
+        install_command = self._yay_install_cmd()
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            for command in self._commands:
-                script_file.write(f"{' '.join(command)}\n")
+            for command in self._top_commands:
+                script_file.write(command + '\n')
+            script_file.write(f"{' '.join(install_command)}\n")
 
     def last(self):
         for key, value in self._after.items():
@@ -284,34 +284,18 @@ class Arch:
                 getattr(class_obj, key)()
 
 
-class Ubuntu:
-    """
-    Ubuntu install class
-    """
-    def __init__(self, lts):
-        self.lts = lts
-        self._packages = []
-        self.ppa = []
-        self._after = {'vkbasalt': [False, All]}
-
-    def lutris(self):
-        print("Adding lutris ppa")
-        self.ppa.append('ppa:lutris-team/lutris')
-
-    def steam(self):
-        self._packages.append('steam-installer')
-
-
 class Fedora:
     """
     Fedora install class
     """
     def __init__(self):
         self._packages = []
-        self._commands = []
         self._top_commands = []
         self._fedora_ver = list(distro.linux_distribution())[1]
-        self._after = {'vkbasalt': [False, All]}
+        self._after = {
+            'vkbasalt': [False, All],
+            'gamemode': [False, All]
+            }
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
@@ -373,19 +357,19 @@ class Fedora:
         Creates the dnf install command
         """
         print("Creating the dnf install command")
-        dnf_command = ['dnf', 'install', '-y']
+        command = ['dnf', 'install', '-y']
         for package in self._packages:
-            dnf_command.insert(2, package)
-        self._commands.append(dnf_command)
+            command.insert(2, package)
+        return command
 
     def create_install_script(self):
-        self._dnf_install_cmd()
+        command = self._dnf_install_cmd()
         print("Creating the install script")
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
             for command in set(self._top_commands):
                 script_file.write(' '.join(command) + '\n')
-            for command in set(self._commands):
+            for command in set(command):
                 script_file.write(' '.join(command) + '\n')
         print("Install script created !")
 
@@ -399,7 +383,6 @@ class Fedora:
 class Solus:
     def __init__(self):
         self._packages = []
-        self._commands = []
         self._after = {'vkbasalt': [False, All]}
 
     def lutris(self):
@@ -433,13 +416,62 @@ class Solus:
         command = ['eopkg', 'install', '-y']
         for package in self._packages:
             command.insert(2, package)
-        self._commands.append(' '.join(command) + '\n')
+        return ' '.join(command) + '\n'
 
     def create_install_script(self):
-        self._eopkg_install_cmd()
+        install_command = self._eopkg_install_cmd()
         print("Creating the install script")
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            for command in set(self._commands):
+            for command in set(install_command):
                 script_file.write(' '.join(command) + '\n')
         print("Install script created !")
+
+    def last(self):
+            for key, value in self._after.items():
+                if value[0]:
+                    class_obj = value[1]()
+                    getattr(class_obj, key)()
+
+
+class Ubuntu:
+    def __init__(self):
+        self._packages = []
+        self._top_commands = []
+        self._after = {
+            'vkbasalt': [False, All],
+            'gamemode': [False, All]
+            }
+        self.version = float(distro.version())
+    def lutris(self):
+        for command in [
+                'dpkg --add-architecture i386',
+                'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
+                'apt-key add winehq.key'
+                ]:
+            self._top_commands.append(command)
+        versions_repo = {
+            'eoan': (
+                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
+                ),
+            'disco': (
+                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
+                ),
+            'cosmic': (
+                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
+                ),
+            'bionic': (
+                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
+                ),
+            'xenial': (
+                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
+                )
+            }
+        for version in versions_repo:
+            if version or version.capitalize() in versions_repo:
+                repository = versions_repo.get(version)
+                self._top_commands.append(repository)
+    
+    def tester(self):
+        print(self._top_commands)
+        print(self._packages)
