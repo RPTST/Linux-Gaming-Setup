@@ -86,7 +86,7 @@ class All:
         print("Removing folder ./tmp")
         shutil.rmtree(f'{self.current_folder}/tmp/vkBasalt')
 
-    def gamemode(self):
+    def gamemode(self, last_arg):
         gamemode_path = f'{self.programs_folder}/Gamemode'
         link = 'https://github.com/FeralInteractive/gamemode.git'
 
@@ -107,7 +107,8 @@ class All:
         print("Building gamemode.")
         subprocess.Popen(
             (
-                f'.{gamemode_path}/bootstrap.sh'
+                f'.{gamemode_path}/bootstrap.sh',
+                last_arg
                 ),
             stdout=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
@@ -137,7 +138,7 @@ class All:
         for key, value in class_obj._after.items():
             if value[0]:
                 class_obj = value[1]()
-                getattr(class_obj, key)()
+                getattr(class_obj, key)(value[2])
 
     @staticmethod
     def create_install_cmd(command, insert_int, packages):
@@ -316,10 +317,10 @@ class Fedora:
     def __init__(self):
         self._packages = []
         self._top_commands = []
-        self._fedora_ver = list(distro.linux_distribution())[1]
+        self._fedora_ver = float(distro.version())
         self._after = {
             'vkbasalt': [False, All],
-            'gamemode': [False, All]
+            'gamemode': [False, All,]
             }
 
     def lutris(self):
@@ -429,11 +430,14 @@ class Ubuntu:
         self._top_commands = []
         self._after = {
             'vkbasalt': [False, All],
-            'gamemode': [False, All]
+            'gamemode': [False, All, '-y']
             }
         self.version = float(distro.version())
 
     def lutris(self):
+        self._top_commands.append(
+            'sudo add-apt-repository ppa:lutris-team/lutris'
+            )
         for command in [
                 'dpkg --add-architecture i386',
                 'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
@@ -463,17 +467,17 @@ class Ubuntu:
                 )
             }
         for version in versions_repo:
-            if version or version.capitalize() in versions_repo:
+            if version in distro.codename().lower():
                 repository = versions_repo.get(version)
                 self._top_commands.append(repository)
-                self._top_commands.append('apt update')
                 if version == 'eoan':
                     self._top_commands.append(
-                        'sudo apt install --install-recommends winehq-stable')
+                        'sudo apt install --install-recommends winehq-stable -y'
+                        )
 
         self._top_commands.append(
-            'apt install --install-recommends ' +
-            'winehq-stable wine-stable wine-stable-i386 wine-stable-amd64'
+            'apt install --install-recommends -y' +
+            'winehq-stable wine-stable wine-stable-i386 wine-stable-amd64 -y'
             )
         for package in [
                 'libgnutls30:i386', 'libldap-2.4-2:i386',
@@ -489,19 +493,26 @@ class Ubuntu:
 
     def vkbasalt(self):  # fixme
         self._after['vkbasalt'][0] = True
+        if 'eoan' in distro.codename().lower():
+            for package in [
+                    'build-essential', 'glslang-tools', 'libvulkan-dev',
+                    'vulkan-validationlayers-dev', 'vulkan-tools', 'spirv-tools'
+                    ]:
+                self._packages.append(package)
 
     def gamemode(self):
         for package in [
                 'meson', 'libsystemd-dev',
                 'pkg-config', 'ninja-build',
                 'libdbus-1-dev', 'libinih-dev',
-                'git'
+                'git', 'dbus-user-session'
                 ]:
             self._packages.append(package)
         self._after['gamemode'][0] = True
 
     def create_install_script(self):
         command = ['apt', 'install', '-y']
+        self._top_commands.append('apt update')
         All.create_install_script(
             self, [command, 2]
             )
