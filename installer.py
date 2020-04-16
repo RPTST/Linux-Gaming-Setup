@@ -46,7 +46,8 @@ class All:
         os.mkdir(f'{self.programs_folder}/tmp')
         os.mkdir(os.path.expanduser('~/Programs'))
 
-    def download_extract(self, link, path):
+    @staticmethod
+    def download_extract(link, path):
         with urllib.request.urlopen(link) as file:
             with tarfile.open(fileobj=file, mode='r|*') as tar_file:
                 tar_file.extractall(path)
@@ -115,16 +116,58 @@ class All:
 
     def proton_ge(self):
         get_link = (
-            'https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=1'
+            'https://api.github.com/repos/GloriousEggroll/' +
+            'proton-ge-custom/releases?per_page=1'
             )
-        proton_path = os.path.expanduser('~/.local/share/Steam/compatibilitytools.d')
+        proton_path = os.path.expanduser(
+            '~/.local/share/Steam/compatibilitytools.d'
+            )
 
-        print("Getting the download link for the latest proton-ge release")
-        download_link = (
-            requests.get(get_link).json()[0].get('assets')[0].get('browser_download_url')
+        print(
+            "Getting the download link for the latest proton-ge release"
             )
+        download_link = ((
+            requests.get(get_link).json()[0]
+            ).get('assets')[0].get('browser_download_url'))
         print("Downloading the latest proton-ge release.")
         self.download_extract(download_link, proton_path)
+
+    @staticmethod
+    def last(class_obj):
+        for key, value in class_obj._after.items():
+            if value[0]:
+                class_obj = value[1]()
+                getattr(class_obj, key)()
+
+    @staticmethod
+    def create_install_cmd(command, insert_int, packages):
+        """
+        Creates the install command
+        """
+        for package in packages:
+            command.insert(insert_int, package)
+        return ' '.join(command)
+
+    @staticmethod
+    def create_install_script(class_obj, create_icmd):
+        """
+        Creates the install.sh file
+        """
+        install_cmd = All.create_install_cmd(
+            create_icmd[0],
+            create_icmd[1],
+            class_obj._packages
+            )
+        with open('./install.sh', 'a') as script_file:
+            script_file.write("echo 'Install script executed'\n")
+            if class_obj._top_commands:
+                script_file.write("echo 'Top command/s executed'\n")
+                for _top_cmd in class_obj._top_commands:
+                    script_file.write(_top_cmd + '\n')
+            if create_icmd[1]:
+                script_file.write("echo 'Packages are being downloaded'\n")
+                script_file.write(install_cmd + '\n')
+
 
 class Arch:
     """
@@ -256,32 +299,14 @@ class Arch:
                 ]:
             self._packages.append(gamemode_package)
 
-    def _yay_install_cmd(self):
-        """
-        Creates the yay install command
-        """
-
+    def create_install_script(self):
         command = [
             'yay', '-S', '--redownloadall', '--sudoloop',
             '--nocleanmenu', '--nodiffmenu', '--noeditmenu'
             ]
-        for package in self._packages:
-            command.insert(2, package)
-        return command
-
-    def create_install_script(self):
-        install_command = self._yay_install_cmd()
-        with open('./install.sh', 'a') as script_file:
-            script_file.write("echo 'Install script executed'\n")
-            for command in self._top_commands:
-                script_file.write(command + '\n')
-            script_file.write(f"{' '.join(install_command)}\n")
-
-    def last(self):
-        for key, value in self._after.items():
-            if value[0]:
-                class_obj = value[1]()
-                getattr(class_obj, key)()
+        All.create_install_script(
+            self, [command, 2]
+            )
 
 
 class Fedora:
@@ -352,32 +377,11 @@ class Fedora:
                 'pkg-config', 'git dbus-devel'):
             self._packages.append(package)
 
-    def _dnf_install_cmd(self):
-        """
-        Creates the dnf install command
-        """
-        print("Creating the dnf install command")
-        command = ['dnf', 'install', '-y']
-        for package in self._packages:
-            command.insert(2, package)
-        return command
-
     def create_install_script(self):
-        command = self._dnf_install_cmd()
-        print("Creating the install script")
-        with open('./install.sh', 'a') as script_file:
-            script_file.write("echo 'Install script executed'\n")
-            for command in set(self._top_commands):
-                script_file.write(' '.join(command) + '\n')
-            for command in set(command):
-                script_file.write(' '.join(command) + '\n')
-        print("Install script created !")
-
-    def last(self):
-        for key, value in self._after.items():
-            if value[0]:
-                class_obj = value[1]()
-                getattr(class_obj, key)()
+        command = ['dnf', 'install', '-y']
+        All.create_install_script(
+            self, [command, 2]
+            )
 
 
 class Solus:
@@ -412,26 +416,11 @@ class Solus:
                 'gamemode', 'gamemode-32bit']:
             self._packages.append(package)
 
-    def _eopkg_install_cmd(self):
-        command = ['eopkg', 'install', '-y']
-        for package in self._packages:
-            command.insert(2, package)
-        return ' '.join(command) + '\n'
-
     def create_install_script(self):
-        install_command = self._eopkg_install_cmd()
-        print("Creating the install script")
-        with open('./install.sh', 'a') as script_file:
-            script_file.write("echo 'Install script executed'\n")
-            for command in set(install_command):
-                script_file.write(' '.join(command) + '\n')
-        print("Install script created !")
-
-    def last(self):
-            for key, value in self._after.items():
-                if value[0]:
-                    class_obj = value[1]()
-                    getattr(class_obj, key)()
+        command = ['eopkg', 'install', '-y']
+        All.create_install_script(
+            self, [command, 2]
+            )
 
 
 class Ubuntu:
@@ -443,6 +432,7 @@ class Ubuntu:
             'gamemode': [False, All]
             }
         self.version = float(distro.version())
+
     def lutris(self):
         for command in [
                 'dpkg --add-architecture i386',
@@ -452,26 +442,62 @@ class Ubuntu:
             self._top_commands.append(command)
         versions_repo = {
             'eoan': (
-                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
+                "sudo apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
                 ),
             'disco': (
-                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
+                "sudo apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
                 ),
             'cosmic': (
-                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
+                "sudo apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
                 ),
             'bionic': (
-                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
+                "sudo apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
                 ),
             'xenial': (
-                "sudo apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
+                "sudo apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
                 )
             }
         for version in versions_repo:
             if version or version.capitalize() in versions_repo:
                 repository = versions_repo.get(version)
                 self._top_commands.append(repository)
-    
-    def tester(self):
-        print(self._top_commands)
-        print(self._packages)
+                self._top_commands.append('apt update')
+                if version == 'eoan':
+                    self._top_commands.append(
+                        'sudo apt install --install-recommends winehq-stable')
+
+        for package in [
+                'libgnutls30:i386', 'libldap-2.4-2:i386',
+                'libgpg-error0:i386', 'libxml2:i386',
+                'libasound2-plugins:i386', 'libsdl2-2.0-0:i386',
+                'libfreetype6:i386', 'libdbus-1-3:i386',
+                'libsqlite3-0:i386'
+                ]:
+            self._packages.append(package)
+
+    def steam(self):
+        self._packages.append('steam')
+
+    def vkbasalt(self):  # fixme
+        self._after['vkbasalt'][0] = True
+
+    def gamemode(self):
+        for package in [
+                'meson', 'libsystemd-dev',
+                'pkg-config', 'ninja-build',
+                'libdbus-1-dev', 'libinih-dev',
+                'git'
+                ]:
+            self._packages.append(package)
+        self._after['gamemode'][0] = True
+
+    def create_install_script(self):
+        command = ['apt', 'install', '-y']
+        All.create_install_script(
+            self, [command, 2]
+            )
