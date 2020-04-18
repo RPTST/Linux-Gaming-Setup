@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 __all__ = ('GraphicsCard',)
@@ -26,6 +27,7 @@ class GraphicsCard:
                 stdin=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
+                env={**os.environ, 'LC_ALL': 'C'},
                 universal_newlines=True,
         ) as popen:
             self.glxinfo = popen.stdout.readlines()
