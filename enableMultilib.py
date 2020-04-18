@@ -4,6 +4,9 @@ import tempfile
 import shutil
 import sys
 
+__all__ = ('pacmanConf',)
+
+
 def _pacmanConf(path="/etc/pacman.conf"):
     with open(path, "r") as file:
         data = file.readlines()
@@ -27,6 +30,7 @@ def _pacmanConf(path="/etc/pacman.conf"):
     os.rename(tmp_file.name, path)
 
     return 2
+
 
 def pacmanConf():
     print("\nrunning enableMultilib().")
