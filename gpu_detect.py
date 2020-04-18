@@ -1,45 +1,56 @@
 import subprocess
 
+__all__ = ('Graphics_card',)
 
-class Graphics_card:
+
+class GraphicsCard:
+    __slots__ = ('glxinfo', '_vendor', '_name')
+
+    VENDORS = ('amd', 'nvidia', 'intel')
+    
+    @property
+    def vendor(self):
+        if self._vendor is None:
+            self._vendor = self._get_vendor()
+        return self._vendor
+    
+    @property
+    def name(self):
+        if self._name is None:
+            self._name = self._get_name()
+        return self._name
+
     def __init__(self):
-        self.glxinfo = subprocess.Popen(
+        with subprocess.Popen(
             ('glxinfo', '-B'),
             stdin=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            stdout=subprocess.PIPE
-            ).stdout.read().decode().splitlines()
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        ) as popen:
+            self.glxinfo = popen.stdout.readlines()
+        self._vendor = None
+        self._name = None
 
-    def vendor(self):
-        vendors = ['amd', 'nvidia', 'intel']
-        data = self.glxinfo
-
-        def clean(line):
-            return line.split(':')[1]
-
+    def _get_vendor(self):
         def check(info):
-            nonlocal vendors
-            for vendor in vendors:
-                if vendor in info:
-                    return vendor
-                elif vendor.upper() in info:
+            for vendor in Graphics_card.VENDORS:
+                if vendor in info or vendor.upper() in info:
                     return vendor
 
-        for line in data:
-            if line.startswith(
-                'OpenGL vendor string:') or line.startswith(
-                    '    Device:'):
-                info = clean(line)
-                return check(info)
-
-    def name(self):
         for line in self.glxinfo:
-            if line.strip().startswith('OpenGL renderer string: '):
+            if line.startswith(('OpenGL vendor string:', '    Device:')):
+                return check(line.split(':')[1])
+
+    def _get_name(self):
+        for line in self.glxinfo:
+            line = line.strip()
+            if line.startswith('OpenGL renderer string: '):
                 name = line.split(': ')[1]
                 if '/' in name:
                     name = name.split('/')[0]
                 return name
-            elif line.strip().startswith('Device: '):
+            elif line.startswith('Device: '):
                 data = line.split('Device: ')[1]
                 name = data.replace('AMD ', '').replace(' (TM)', '')
                 return name.split(' (')[0].replace(' Graphics', '')
