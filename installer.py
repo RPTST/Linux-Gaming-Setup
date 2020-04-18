@@ -5,6 +5,8 @@ import tarfile
 import urllib
 import requests
 import distro
+import multi
+
 
 # Lutris
 """
@@ -39,31 +41,32 @@ to install selected programs & required packages
 
 
 class All:
-    """Installer where distro doesnt matter"""
+    """
+    Installer where distro doesnt matter
+    """
     def __init__(self):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
         self.programs_folder = os.path.expanduser('~/Programs')
         os.mkdir(f'{self.programs_folder}/tmp')
         os.mkdir(os.path.expanduser('~/Programs'))
-
-    @staticmethod
-    def download_extract(link, path):
-        with urllib.request.urlopen(link) as file:
-            with tarfile.open(fileobj=file, mode='r|*') as tar_file:
-                tar_file.extractall(path)
+        self.apil_proton = (
+            'https://api.github.com/repos/GloriousEggroll/' +
+            'proton-ge-custom/releases'
+            )
 
     def vkbasalt(self):
-        # configuration https://youtu.be/6p1SNBy4P74?t=875
         download_link = (
             "https://github.com/DadSchoorse/vkbasalt/" +
             "releases/latest/download/vkbasalt.tar.gz"
             )
         print("downloading vkBasalt.tar.gz and extracting it to ~/Programs")
-        self.download_extract(download_link, self.programs_folder)
+        multi.download_extract(download_link, self.programs_folder)
 
         print("Building and configuring it like Chris Titus Tech did.\n")
         subprocess.Popen(
             (
+                'make' f'{self.programs_folder}tmp/vkBasalt',
+                '&&',
                 'make', f'{self.programs_folder}tmp/vkBasalt',
                 'install'
                 ),
@@ -91,19 +94,9 @@ class All:
         link = 'https://github.com/FeralInteractive/gamemode.git'
 
         print("Cloning Gamemode.")
-        subprocess.Popen(
-            (
-                'cd', gamemode_path, '&&',
-                'git', 'clone', link, '&&',
-                'release=$( git tag | tail -1)', '&&',
-                'git', 'checkout', '$release;'
-                ),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            shell=True
-            ).wait()
+        multi.get_download_link(
 
+        )
         print("Building gamemode.")
         subprocess.Popen(
             (
@@ -115,23 +108,13 @@ class All:
             stderr=subprocess.DEVNULL
             ).wait()
 
-    def proton_ge(self):
-        get_link = (
-            'https://api.github.com/repos/GloriousEggroll/' +
-            'proton-ge-custom/releases?per_page=1'
-            )
+    def proton_ge(self, links): # fixme
+        # use api_link in a different file (main file)
         proton_path = os.path.expanduser(
             '~/.local/share/Steam/compatibilitytools.d'
             )
-
-        print(
-            "Getting the download link for the latest proton-ge release"
-            )
-        download_link = ((
-            requests.get(get_link).json()[0]
-            ).get('assets')[0].get('browser_download_url'))
-        print("Downloading the latest proton-ge release.")
-        self.download_extract(download_link, proton_path)
+        for link in links:
+            multi.download_extract(link, proton_path)
 
     @staticmethod
     def last(class_obj):
@@ -255,8 +238,7 @@ class Arch:
             Returns packages Vulkan packages for Intel igpus
             """
             return [
-                'sudo', 'pacman',
-                '-S', 'lib32-mesa',
+                'lib32-mesa',
                 'vulkan-intel',
                 'lib32-vulkan-intel',
                 'vulkan-icd-loader',
@@ -435,58 +417,64 @@ class Ubuntu:
         self.version = float(distro.version())
 
     def lutris(self):
-        self._top_commands.append(
-            'sudo add-apt-repository ppa:lutris-team/lutris'
-            )
-        for command in [
-                'dpkg --add-architecture i386',
-                'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
-                'apt-key add winehq.key'
-                ]:
-            self._top_commands.append(command)
-        versions_repo = {
-            'eoan': (
-                "sudo apt-add-repository " +
-                "'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
-                ),
-            'disco': (
-                "sudo apt-add-repository " +
-                "'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
-                ),
-            'cosmic': (
-                "sudo apt-add-repository " +
-                "'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
-                ),
-            'bionic': (
-                "sudo apt-add-repository " +
-                "'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
-                ),
-            'xenial': (
-                "sudo apt-add-repository " +
-                "'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
+        def wine():
+            self._top_commands.append(
+                'add-apt-repository ppa:lutris-team/lutris'
                 )
-            }
-        for version in versions_repo:
-            if version in distro.codename().lower():
-                repository = versions_repo.get(version)
-                self._top_commands.append(repository)
-                if version == 'eoan':
-                    self._top_commands.append(
-                        'sudo apt install --install-recommends winehq-stable -y'
-                        )
+            for command in [
+                    'dpkg --add-architecture i386',
+                    'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
+                    'apt-key add winehq.key']:
+                self._top_commands.append(command)
+            versions_repo = {
+                'eoan': (
+                    "apt-add-repository " +
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
+                    ),
+                'disco': (
+                    "apt-add-repository " +
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
+                    ),
+                'cosmic': (
+                    "apt-add-repository " +
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
+                    ),
+                'bionic': (
+                    "apt-add-repository " +
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
+                    ),
+                'xenial': (
+                    "apt-add-repository " +
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
+                    )
+                }
+            for version in versions_repo:
+                if version in distro.codename().lower():
+                    repository = versions_repo.get(version)
+                    self._top_commands.append(repository)
+                    if version == 'eoan':
+                        self._top_commands.append(
+                            'apt install --install-recommends wine-stable winehq-stable ' +
+                            'wine-stable wine-stable-i386 wine-stable-amd64 -y'
+                            )
+                    else:
+                        self._top_commands.append(
+                            'apt install --install-recommends winehq-stable -y'
+                            )
+                else:
+                    raise SystemError("Version of ubuntu not recognized")
+            
 
-        self._top_commands.append(
-            'apt install --install-recommends -y' +
-            'winehq-stable wine-stable wine-stable-i386 wine-stable-amd64 -y'
-            )
-        for package in [
-                'libgnutls30:i386', 'libldap-2.4-2:i386',
-                'libgpg-error0:i386', 'libxml2:i386',
-                'libasound2-plugins:i386', 'libsdl2-2.0-0:i386',
-                'libfreetype6:i386', 'libdbus-1-3:i386',
-                'libsqlite3-0:i386'
-                ]:
-            self._packages.append(package)
+        wine()
+        # drivers
+        def amd_intel(vulkan):
+            self._top_commands.append("dpkg --add-architecture i386")
+            self._packages.append("libgl1-mesa-dri:i386")
+            if vulkan:
+                for package in [
+                        "mesa-vulkan-drivers",
+                        "mesa-vulkan-drivers:i386"]:
+                    self._packages.append(package)
 
     def steam(self):
         self._packages.append('steam')
@@ -495,9 +483,9 @@ class Ubuntu:
         self._after['vkbasalt'][0] = True
         if 'eoan' in distro.codename().lower():
             for package in [
-                    'build-essential', 'glslang-tools', 'libvulkan-dev',
-                    'vulkan-validationlayers-dev', 'vulkan-tools', 'spirv-tools'
-                    ]:
+                    'build-essential', 'glslang-tools',
+                    'vulkan-validationlayers-dev', 'libvulkan-dev',
+                    'vulkan-tools', 'spirv-tools']:
                 self._packages.append(package)
 
     def gamemode(self):
