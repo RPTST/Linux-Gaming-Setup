@@ -25,8 +25,8 @@ class GraphicsCard:
         with subprocess.Popen(
                 ('glxinfo', '-B'),
                 stdin=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
                 env={**os.environ, 'LC_ALL': 'C'},
                 universal_newlines=True,
         ) as popen:
