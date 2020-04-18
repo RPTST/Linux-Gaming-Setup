@@ -1,9 +1,6 @@
 import subprocess
 import os
 import shutil
-import tarfile
-import urllib
-import requests
 import distro
 import multi
 
@@ -44,6 +41,11 @@ class All:
     """
     Installer where distro doesnt matter
     """
+    __slots__ = (
+        'current_folder',
+        'programs_folder',
+        'apil_proton'
+        )
     def __init__(self):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
         self.programs_folder = os.path.expanduser('~/Programs')
@@ -94,9 +96,7 @@ class All:
         link = 'https://github.com/FeralInteractive/gamemode.git'
 
         print("Cloning Gamemode.")
-        multi.get_download_link(
-
-        )
+        multi.get_download_link(link, 'first', 1)
         print("Building gamemode.")
         subprocess.Popen(
             (
@@ -108,8 +108,12 @@ class All:
             stderr=subprocess.DEVNULL
             ).wait()
 
-    def proton_ge(self, links): # fixme
+    def proton_ge(links): # fixme
         # use api_link in a different file (main file)
+        get_link = (
+            'https://api.github.com/repos/GloriousEggroll/' +
+            'proton-ge-custom/releases?per_page=1'
+            )
         proton_path = os.path.expanduser(
             '~/.local/share/Steam/compatibilitytools.d'
             )
@@ -157,6 +161,12 @@ class Arch:
     """
     Arch based install class
     """
+    __slots__ = (
+        '_top_commands',
+        '_packages',
+        '_after',
+        '_ypackage',
+        )
     def __init__(self):
         self._top_commands = []
         self._packages = []
@@ -296,6 +306,12 @@ class Fedora:
     """
     Fedora install class
     """
+    __slots__ = (
+        '_packages',
+        '_top_commands',
+        '_fedora_ver',
+        '_after'
+        )
     def __init__(self):
         self._packages = []
         self._top_commands = []
@@ -368,6 +384,13 @@ class Fedora:
 
 
 class Solus:
+    """
+    Solus install class
+    """
+    __slots__ = (
+        '_packages',
+        '_after'
+        )
     def __init__(self):
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
@@ -407,6 +430,15 @@ class Solus:
 
 
 class Ubuntu:
+    """
+    Ubuntu install class
+    """
+    __slots__ = (
+        '_packages',
+        '_top_commands',
+        '_after',
+        'version'
+        )
     def __init__(self):
         self._packages = []
         self._top_commands = []
@@ -463,7 +495,6 @@ class Ubuntu:
                             )
                 else:
                     raise SystemError("Version of ubuntu not recognized")
-            
 
         wine()
         # drivers
