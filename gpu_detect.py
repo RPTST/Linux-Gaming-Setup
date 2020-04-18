@@ -4,16 +4,16 @@ __all__ = ('Graphics_card',)
 
 
 class GraphicsCard:
-    __slots__ = ('glxinfo', '_vendor', '_name')
+    __slots__ = ('glxinfo', '_vendor', '_name', '__weakref__')
 
     VENDORS = ('amd', 'nvidia', 'intel')
-    
+
     @property
     def vendor(self):
         if self._vendor is None:
             self._vendor = self._get_vendor()
         return self._vendor
-    
+
     @property
     def name(self):
         if self._name is None:
