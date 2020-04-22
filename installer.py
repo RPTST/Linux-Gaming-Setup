@@ -44,17 +44,14 @@ class All:
     __slots__ = (
         'current_folder',
         'programs_folder',
-        'apil_proton'
+        'proton_ge_aurl'
         )
-    def __init__(self):
+    def __init__(self, prge_aurl):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
         self.programs_folder = os.path.expanduser('~/Programs')
         os.mkdir(f'{self.programs_folder}/tmp')
         os.mkdir(os.path.expanduser('~/Programs'))
-        self.apil_proton = (
-            'https://api.github.com/repos/GloriousEggroll/' +
-            'proton-ge-custom/releases'
-            )
+        self.proton_ge_aurl = prge_aurl # github api url
 
     def vkbasalt(self):
         download_link = (
@@ -108,11 +105,12 @@ class All:
             stderr=subprocess.DEVNULL
             ).wait()
 
+    @staticmethod
     def proton_ge(links): # fixme
         # use api_link in a different file (main file)
-        get_link = (
+        api_link = (
             'https://api.github.com/repos/GloriousEggroll/' +
-            'proton-ge-custom/releases?per_page=1'
+            'proton-ge-custom/releases'
             )
         proton_path = os.path.expanduser(
             '~/.local/share/Steam/compatibilitytools.d'
@@ -446,7 +444,7 @@ class Ubuntu:
             'vkbasalt': [False, All],
             'gamemode': [False, All, '-y']
             }
-        self.version = float(distro.version())
+        self.version = distro.version()
 
     def lutris(self):
         def wine():
