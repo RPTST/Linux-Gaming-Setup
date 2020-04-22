@@ -1,9 +1,8 @@
 import os
 import subprocess
-
 import distro
 
-__all__ = ('Distribution', 'Hardware')
+__all__ = ('Distribution', 'GraphicsCard', 'Processor')
 
 
 class Distribution:
@@ -24,16 +23,65 @@ class Distribution:
                 "distro_version": self._distro_info[1]}
 
 
-class Hardware:
-    __slots__ = ('__weakref__',)
+class GraphicsCard:
+    __slots__ = ('glxinfo', '_vendor', '_name', '__weakref__')
 
-    GPU_VENDORS = ("AMD", "INTEL", "NVIDIA")
+    VENDORS = ('amd', 'nvidia', 'intel')
+
+    @property
+    def vendor(self):
+        if self._vendor is None:
+            self._vendor = self._get_vendor()
+        return self._vendor
+
+    @property
+    def name(self):
+        if self._name is None:
+            self._name = self._get_name()
+        return self._name
 
     def __init__(self):
-        pass
+        with subprocess.Popen(
+                ('glxinfo', '-B'),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                env={**os.environ, 'LC_ALL': 'C'},
+                universal_newlines=True,
+        ) as popen:
+            self.glxinfo = popen.stdout.readlines()
+        self._vendor = None
+        self._name = None
 
+    def _get_vendor(self):
+        def check(info):
+            for vendor in GraphicsCard.VENDORS:
+                if vendor in info or vendor.upper() in info:
+                    return vendor
+            return None
+
+        for line in self.glxinfo:
+            if line.startswith(('OpenGL vendor string:', '    Device:')):
+                return check(line.split(':')[1])
+
+    def _get_name(self):
+        for line in self.glxinfo:
+            line = line.strip()
+            if line.startswith('OpenGL renderer string: '):
+                name = line.split(': ')[1]
+                if '/' in name:
+                    name = name.split('/')[0]
+                return name
+            if line.startswith('Device: '):
+                data = line.split('Device: ')[1]
+                name = data.replace('AMD ', '').replace(' (TM)', '')
+                return name.split(' (')[0].replace(' Graphics', '')
+        return None
+
+
+class Processor:
     @staticmethod
-    def clean(text):
+    def _clean(text):
         if text.startswith("Intel"):
             text = text.split(" CPU @")[0]
             return text.replace("(R)", "").replace("(TM)", "")
@@ -49,31 +97,7 @@ class Hardware:
         cpu_path = "/proc/cpuinfo"
         with open(cpu_path, "r") as file:
             return next(
-                Hardware.clean(line.split(": ")[1])
+                Processor._clean(line.split(": ")[1])
                 for line in file
                 if line.startswith("model name\t")
             )
-
-    @staticmethod
-    def gpu():
-        with subprocess.Popen(
-                ("glxinfo", "-B"),
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                universal_newlines=True,
-                env={**os.environ, "LC_ALL": "C"},
-        ) as popen:
-            for line in popen.stdout:
-                line = line.strip()
-                if line.startswith("Device: "):
-                    words = line.split(" ")
-                    for element in words:
-                        if element in Hardware.GPU_VENDORS:
-                            return element
-                elif line.startswith("OpenGL vendor string: "):
-                    line = line.upper()
-                    for vendor in Hardware.GPU_VENDORS:
-                        if vendor in line:
-                            return vendor
-        return None
