@@ -1,10 +1,10 @@
-import os
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk
+import os
 import webbrowser
-import installer
 import distro
+import installer
 import info
 
 
@@ -58,6 +58,8 @@ class Window:
             os.path.dirname(os.path.abspath(__file__)) + '/'
             )
         self._app_init()
+        self.toggle_programs = dict()
+        self.popout_programs = dict()
 
     @property
     def distro_class(self):
@@ -73,7 +75,7 @@ class Window:
                 print_name(distribution.__name__)
                 return distribution
         else:
-            distribution =  getattr(installer, distro.like().capitalize())
+            distribution = getattr(installer, distro.like().capitalize())
             print_name(distribution.__name__)
             return distribution
 
@@ -87,7 +89,7 @@ class Window:
         """
         self.builder = Gtk.Builder()
         self.builder.add_from_file(self.current_path + 'ui.glade')
-        
+
         self.builder.connect_signals(
             self.handler
             )
@@ -100,7 +102,7 @@ class Window:
             )
         self.window = self.builder.get_object('app_window')
 
-        # Function needed to be executed 
+        # Function needed to be executed
         self.set_gpu_vendor()
         self.objects_and_vars()
         self.programs_flowb()
@@ -113,9 +115,6 @@ class Window:
         combo_box.set_active_id(self.gpu_vendor)
 
     def objects_and_vars(self):
-        self.refresh_btn  = self.builder.get_object(
-            'refresh_everything'
-            )
         self.menu_button = self.builder.get_object(
             'menu_button'
             )
@@ -128,6 +127,7 @@ class Window:
         self.popout_programs = {
             'Proton-Ge': None
             }
+
     def programs_to_install(self):
         """
         Gets programs to install by checking if the
@@ -151,9 +151,8 @@ class Window:
                 install_btn.set_name(program_name)
 
                 vbox.pack_end(install_btn, True, True, 0)
-                return vbox, install_btn
 
-            if not toggle_btn:
+            else:
                 vbox = Gtk.VBox()
                 vbox.pack_start(Gtk.Label(program_name), True, True, 0)
                 install_btn = Gtk.Button("Choose")
@@ -161,7 +160,8 @@ class Window:
                 # install_btn.connect(program_name)
 
                 vbox.pack_end(install_btn, True, True, 0)
-                return vbox, install_btn
+
+            return vbox, install_btn
 
         for program in self.toggle_programs:
             _box, button_obj = box(program, True)
