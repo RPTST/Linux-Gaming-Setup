@@ -11,7 +11,11 @@
   <object class="GtkApplicationWindow" id="app_window">
     <property name="name">app_window</property>
     <property name="can_focus">False</property>
+    <property name="window_position">center</property>
+    <property name="default_width">400</property>
+    <property name="default_height">100</property>
     <property name="hide_titlebar_when_maximized">True</property>
+    <property name="gravity">center</property>
     <signal name="destroy" handler="on_destroy" swapped="no"/>
     <child type="titlebar">
       <object class="GtkHeaderBar">
@@ -52,6 +56,10 @@
             <property name="name">program_flowb</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="column_spacing">5</property>
+            <property name="row_spacing">5</property>
+            <property name="max_children_per_line">5</property>
+            <property name="selection_mode">none</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -134,47 +142,15 @@
             <property name="tooltip_text" translatable="yes">Select your gpu vendor.</property>
             <property name="tearoff_title" translatable="yes">Unknown</property>
             <items>
-              <item id="&lt;Enter ID&gt;" translatable="yes">Amd</item>
-              <item id="&lt;Enter ID&gt;" translatable="yes">Intel</item>
-              <item id="&lt;Enter ID&gt;" translatable="yes">Nvidia</item>
+              <item id="amd" translatable="yes">Amd</item>
+              <item id="intel" translatable="yes">Intel</item>
+              <item id="nvidia" translatable="yes">Nvidia</item>
             </items>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkSpinButton">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="tooltip_text" translatable="yes">How many releases it should show</property>
-            <property name="adjustment">releases</property>
-            <property name="value">3</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkComboBoxText" id="prereleases_show">
-            <property name="name">prereleases_show</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="tooltip_text" translatable="yes">If it should show pre-releases</property>
-            <items>
-              <item id="&lt;Enter ID&gt;" translatable="yes">All</item>
-              <item id="&lt;Enter ID&gt;" translatable="yes">First</item>
-              <item translatable="yes">None</item>
-            </items>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
           </packing>
         </child>
       </object>
