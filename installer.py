@@ -46,14 +46,14 @@ class All:
         'programs_folder',
         'proton_ge_aurl'
         )
-    def __init__(self, prge_aurl):
+
+    def __init__(self):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
         self.programs_folder = os.path.expanduser('~/Programs')
-        os.mkdir(f'{self.programs_folder}/tmp')
-        os.mkdir(os.path.expanduser('~/Programs'))
-        self.proton_ge_aurl = prge_aurl # github api url
+        self.create_folder(self.programs_folder)
+        self.create_folder(self.programs_folder + '/tmp')
 
-    def vkbasalt(self):
+    def vkbasalt_all(self):
         download_link = (
             "https://github.com/DadSchoorse/vkbasalt/" +
             "releases/latest/download/vkbasalt.tar.gz"
@@ -88,12 +88,12 @@ class All:
         print("Removing folder ./tmp")
         shutil.rmtree(f'{self.current_folder}/tmp/vkBasalt')
 
-    def gamemode(self, last_arg):
+    def gamemode_all(self, last_arg):
         gamemode_path = f'{self.programs_folder}/Gamemode'
         link = 'https://github.com/FeralInteractive/gamemode.git'
 
         print("Cloning Gamemode.")
-        multi.get_download_link(link, 'first', 1)
+        multi.get_release_data(link, 'first', 1)
         print("Building gamemode.")
         subprocess.Popen(
             (
@@ -106,27 +106,27 @@ class All:
             ).wait()
 
     @staticmethod
-    def proton_ge(links): # fixme
-        # use api_link in a different file (main file)
-        api_link = (
-            'https://api.github.com/repos/GloriousEggroll/' +
-            'proton-ge-custom/releases'
-            )
+    def proton_ge_all(links):
         proton_path = os.path.expanduser(
             '~/.local/share/Steam/compatibilitytools.d'
             )
         for link in links:
             multi.download_extract(link, proton_path)
 
-    @staticmethod
-    def last(class_obj):
-        for key, value in class_obj._after.items():
+    # def return_proton_dicts(self): #fixme
+    #     api_link = (
+    #         'https://api.github.com/repos/GloriousEggroll/' +
+    #         'proton-ge-custom/releases'
+    #         )
+
+    def last_all(self):
+        for key, value in self._after.items():
             if value[0]:
-                class_obj = value[1]()
-                getattr(class_obj, key)(value[2])
+                self = value[1]()
+                getattr(self, key)(value[2])
 
     @staticmethod
-    def create_install_cmd(command, insert_int, packages):
+    def create_install_cmd_all(command, insert_int, packages):
         """
         Creates the install command
         """
@@ -135,27 +135,36 @@ class All:
         return ' '.join(command)
 
     @staticmethod
-    def create_install_script(class_obj, create_icmd):
+    def create_install_script_all(create_icmd):
         """
         Creates the install.sh file
         """
-        install_cmd = All.create_install_cmd(
+        install_cmd = All.create_install_cmd_all(
             create_icmd[0],
             create_icmd[1],
-            class_obj._packages
+            self._packages
             )
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            if class_obj._top_commands:
+            if self._top_commands:
                 script_file.write("echo 'Top command/s executed'\n")
-                for _top_cmd in class_obj._top_commands:
+                for _top_cmd in self._top_commands:
                     script_file.write(_top_cmd + '\n')
             if create_icmd[1]:
                 script_file.write("echo 'Packages are being downloaded'\n")
                 script_file.write(install_cmd + '\n')
 
+    @staticmethod
+    def create_folder(path):
+        try:
+            os.mkdir(os.path.expanduser(path))
+            print("Folder created at this path:\t" + path)
 
-class Arch:
+        except FileExistsError:
+            print(f"It seems that the {path} folder has already been created.")
+
+
+class Arch(All):
     """
     Arch based install class
     """
@@ -165,6 +174,7 @@ class Arch:
         '_after',
         '_ypackage',
         )
+
     def __init__(self):
         self._top_commands = []
         self._packages = []
@@ -173,6 +183,7 @@ class Arch:
         self._yay()
         if not self._ypackage:
             raise Exception('Yay not found.')
+        super().__init__()
 
     def _yay(self):
         """
@@ -295,12 +306,12 @@ class Arch:
             'yay', '-S', '--redownloadall', '--sudoloop',
             '--nocleanmenu', '--nodiffmenu', '--noeditmenu'
             ]
-        All.create_install_script(
-            self, [command, 2]
+        All.create_install_script_all(
+            [command, 2]
             )
 
 
-class Fedora:
+class Fedora(All):
     """
     Fedora install class
     """
@@ -310,14 +321,16 @@ class Fedora:
         '_fedora_ver',
         '_after'
         )
+
     def __init__(self):
         self._packages = []
         self._top_commands = []
         self._fedora_ver = float(distro.version())
         self._after = {
             'vkbasalt': [False, All],
-            'gamemode': [False, All,]
+            'gamemode': [False, All]
             }
+        super().__init__()
 
     def lutris(self):
         print("Returning packages needed for lutris app.")
@@ -376,12 +389,12 @@ class Fedora:
 
     def create_install_script(self):
         command = ['dnf', 'install', '-y']
-        All.create_install_script(
-            self, [command, 2]
+        All.create_install_script_all(
+            [command, 2]
             )
 
 
-class Solus:
+class Solus(All):
     """
     Solus install class
     """
@@ -389,9 +402,11 @@ class Solus:
         '_packages',
         '_after'
         )
+
     def __init__(self):
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
+        super().__init__()
 
     def lutris(self):
         print("Adding lutris packages")
@@ -422,12 +437,12 @@ class Solus:
 
     def create_install_script(self):
         command = ['eopkg', 'install', '-y']
-        All.create_install_script(
-            self, [command, 2]
+        All.create_install_script_all(
+            [command, 2]
             )
 
 
-class Ubuntu:
+class Ubuntu(All):
     """
     Ubuntu install class
     """
@@ -437,6 +452,7 @@ class Ubuntu:
         '_after',
         'version'
         )
+
     def __init__(self):
         self._packages = []
         self._top_commands = []
@@ -445,6 +461,7 @@ class Ubuntu:
             'gamemode': [False, All, '-y']
             }
         self.version = distro.version()
+        super().__init__()
 
     def lutris(self):
         def wine():
@@ -459,23 +476,28 @@ class Ubuntu:
             versions_repo = {
                 'eoan': (
                     "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main'"
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                    "eoan main'"
                     ),
                 'disco': (
                     "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ disco main'"
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                    "disco main'"
                     ),
                 'cosmic': (
                     "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ cosmic main'"
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                    "cosmic main'"
                     ),
                 'bionic': (
                     "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main'"
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                    "bionic main'"
                     ),
                 'xenial': (
                     "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main'"
+                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                    "xenial main'"
                     )
                 }
             for version in versions_repo:
@@ -484,7 +506,8 @@ class Ubuntu:
                     self._top_commands.append(repository)
                     if version == 'eoan':
                         self._top_commands.append(
-                            'apt install --install-recommends wine-stable winehq-stable ' +
+                            'apt install --install-recommends' +
+                            'wine-stable winehq-stable ' +
                             'wine-stable wine-stable-i386 wine-stable-amd64 -y'
                             )
                     else:
@@ -495,6 +518,7 @@ class Ubuntu:
                     raise SystemError("Version of ubuntu not recognized")
 
         wine()
+
         # drivers
         def amd_intel(vulkan):
             self._top_commands.append("dpkg --add-architecture i386")
@@ -509,6 +533,7 @@ class Ubuntu:
         self._packages.append('steam')
 
     def vkbasalt(self):  # fixme
+        # test on other ubuntu versions
         self._after['vkbasalt'][0] = True
         if 'eoan' in distro.codename().lower():
             for package in [
@@ -530,6 +555,6 @@ class Ubuntu:
     def create_install_script(self):
         command = ['apt', 'install', '-y']
         self._top_commands.append('apt update')
-        All.create_install_script(
-            self, [command, 2]
+        All.create_install_script_all(
+            [command, 2]
             )
