@@ -113,12 +113,6 @@ class All:
         for link in links:
             multi.download_extract(link, proton_path)
 
-    # def return_proton_dicts(self): #fixme
-    #     api_link = (
-    #         'https://api.github.com/repos/GloriousEggroll/' +
-    #         'proton-ge-custom/releases'
-    #         )
-
     def last_all(self):
         for key, value in self._after.items():
             if value[0]:
@@ -169,6 +163,7 @@ class Arch(All):
     Arch based install class
     """
     __slots__ = (
+        'gpu_vendor',
         '_top_commands',
         '_packages',
         '_after',
@@ -176,6 +171,7 @@ class Arch(All):
         )
 
     def __init__(self):
+        self.gpu_vendor = None
         self._top_commands = []
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
@@ -199,7 +195,10 @@ class Arch(All):
                 print("Yay found !")
                 break
 
-    def lutris(self, gpu_vendor):
+    def lutris(self):
+        if not self.gpu_vendor:
+            print(self.gpu_vendor)
+            raise SystemError("self.gpu_vendor is set to None ! report this")
         self._top_commands.append(
             "python -c 'import enableMultilib" +
             ";enableMultilib.pacmanConf()'")
@@ -225,7 +224,7 @@ class Arch(All):
             ]
 
         print("checking gpu.")
-        print(f"Returning packages for vulkan support on {gpu_vendor} gpu")
+        print(f"Returning packages for vulkan support on {self.gpu_vendor} gpu")
 
         def amd_vulkan():
             """
@@ -268,7 +267,7 @@ class Arch(All):
             'intel': intel_vulkan,
             'nvidia': nvidia_vulkan
             }
-        for vulkan_package in vulkan.get(gpu_vendor)():  # for vulkan support
+        for vulkan_package in vulkan.get(self.gpu_vendor)():  # for vulkan support
             lutris_packages.append(vulkan_package)  # packages for gpu
             for package in lutris_packages:
                 self._packages.append(package)

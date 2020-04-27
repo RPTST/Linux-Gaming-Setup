@@ -56,9 +56,9 @@ class GraphicsCard:
     def _get_vendor(self):
         def check(info):
             for vendor in GraphicsCard.VENDORS:
-                if vendor in info or vendor.upper() in info:
+                if vendor in info.lower():
                     return vendor
-            return None
+            return 'Unknown'
 
         for line in self.glxinfo:
             if line.startswith(('OpenGL vendor string:', '    Device:')):
@@ -76,7 +76,7 @@ class GraphicsCard:
                 data = line.split('Device: ')[1]
                 name = data.replace('AMD ', '').replace(' (TM)', '')
                 return name.split(' (')[0].replace(' Graphics', '')
-        return None
+        return 'Unknown'
 
 
 class Processor:

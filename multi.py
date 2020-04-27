@@ -16,12 +16,12 @@ def download_extract(link, path):
             tar_file.extractall(path)
 
 
-def get_release_data(link, pre_releases='every', i_releases=2):
+def get_release_data(api_link, releases='every'):
     """
     Get basic data for releases... select the mode
     to get certain releases
     """
-    json_objects = requests.get(link).json()
+    json_objects = requests.get(api_link).json()
     egs_releases = []
 
     def add_data(json_object):
@@ -35,28 +35,9 @@ def get_release_data(link, pre_releases='every', i_releases=2):
             )
 
     def every():
-        nonlocal egs_releases, i_releases, json_objects
-        for json_object in json_objects[0:i_releases]:
-            add_data(json_object)
-
-    def first():
-        nonlocal egs_releases, i_releases, json_objects
-        i = 0
-        counter = 0
+        nonlocal egs_releases, json_objects
         for json_object in json_objects:
-            prerelease = json_object.get('prerelease')
-            if not i and prerelease:
-                add_data(json_object)
-                i += 1
-                counter += 1
-                continue
-
-            if not prerelease:
-                add_data(json_object)
-                counter += 1
-
-            if counter == i_releases:
-                break
+            add_data(json_object)
 
     def conditional_last():
         """
@@ -85,9 +66,8 @@ def get_release_data(link, pre_releases='every', i_releases=2):
             counter += 1
 
     prereleases_options = {
-        True: every,
-        'first': first,
+        'every': every,
         'conditional': conditional_last
         }
-    prereleases_options.get(pre_releases)()
+    prereleases_options.get(releases)()
     return egs_releases
