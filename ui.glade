@@ -2,118 +2,10 @@
 <!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkAdjustment" id="releases">
-    <property name="lower">2</property>
-    <property name="upper">15</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkApplicationWindow" id="app_window">
-    <property name="name">app_window</property>
-    <property name="can_focus">False</property>
-    <property name="window_position">center</property>
-    <property name="default_width">400</property>
-    <property name="default_height">100</property>
-    <property name="hide_titlebar_when_maximized">True</property>
-    <property name="gravity">center</property>
-    <signal name="destroy" handler="on_destroy" swapped="no"/>
-    <child type="titlebar">
-      <object class="GtkHeaderBar">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="spacing">0</property>
-        <property name="show_close_button">True</property>
-        <child>
-          <object class="GtkMenuButton" id="menu_button">
-            <property name="name">menu_button</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="focus_on_click">False</property>
-            <property name="receives_default">True</property>
-            <property name="popover">menu_popover</property>
-            <child>
-              <object class="GtkImage">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="icon_name">view-more</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="pack_type">end</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="name">program_flowb</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkFlowBox" id="program_flowb">
-            <property name="name">program_flowb</property>
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="column_spacing">5</property>
-            <property name="row_spacing">5</property>
-            <property name="max_children_per_line">5</property>
-            <property name="selection_mode">none</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Reset</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="install" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Install</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="install" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkPopoverMenu" id="menu_popover">
     <property name="name">menu_popover</property>
     <property name="can_focus">False</property>
-    <property name="relative_to">menu_button</property>
+    <property name="constrain_to">none</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -123,8 +15,8 @@
         <child>
           <object class="GtkModelButton">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
             <property name="text" translatable="yes">Github Page</property>
             <signal name="clicked" handler="self_github_page" swapped="no"/>
           </object>
@@ -135,7 +27,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBoxText" id="gpu_vendor">
+          <object class="GtkComboBoxText" id="select_gpu_vendor">
             <property name="name">gpu_vendor</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -158,6 +50,63 @@
         <property name="submenu">main</property>
         <property name="position">1</property>
       </packing>
+    </child>
+  </object>
+  <object class="GtkWindow" id="tree_view_window">
+    <property name="can_focus">False</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">
+</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="tree_view_box">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="yes">button</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="halign">end</property>
+            <property name="valign">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
     </child>
   </object>
 </interface>
