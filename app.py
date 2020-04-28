@@ -5,4 +5,5 @@ import window
 
 win = window.Window()
 win.connect("destroy", Gtk.main_quit)
-win.show_all();Gtk.main()
+win.show_all()
+Gtk.main()

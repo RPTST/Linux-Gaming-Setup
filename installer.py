@@ -152,7 +152,7 @@ class All:
     def create_folder(path):
         try:
             os.mkdir(os.path.expanduser(path))
-            print("Folder created at this path:\t" + path)
+            print("Folder created at this path:" + path)
 
         except FileExistsError:
             print(f"It seems that the {path} folder has already been created.")

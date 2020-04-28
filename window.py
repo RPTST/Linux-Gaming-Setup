@@ -7,6 +7,7 @@ import distro
 import installer
 import info
 import widgets
+import multi
 
 
 class Handler:
@@ -17,10 +18,6 @@ class Handler:
     """
     def __init__(self, Window_obj):
         self.window = Window_obj
-
-    def on_destroy(self, *args):
-        print('quitting')
-        Gtk.main_quit()
 
     def refresh(self, *args):
         if self.window.refresh_btn.get_active():
@@ -41,6 +38,13 @@ class Handler:
         webbrowser.open_new(
             'https://github.com/lutris/lutris'
             )
+
+    def choose_release(self, button):  # fixme
+        selector = self.window.popout_programs.get(
+            button.get_name()
+            )[2]
+        selector.show_all()
+
     def reset(self, *args):
         to_reset = self.window.get_active_toggle_btn()
         toggle_programs = self.window.toggle_programs
@@ -56,9 +60,34 @@ class Handler:
         for _program in to_install:
             program = _program.replace('-', '_').lower()
             function = getattr(distro_class, program)
-            print(function)
             function()
+        distro_class.create_install_script_all()
+        subprocess.Popen(
+            (
+                'pkexec',
+                'sh',
+                self.window.current_path + 'install.sh'
+                )
+            )
 
+        store = self.window.popout_programs.get(program)[3]
+        if len(store):
+            tag_names = list()
+            proge_links = list()  # proton-ge download links
+            for program in self.window.popout_programs:
+                cells_n = len(store)
+                for i in range(0, cells_n):
+                    if list(store)[i][0]:
+                        tag_names.append(list(store)[i][1])
+
+            for json_onject in self.releases_data:
+                tag_name = json_object.get('tag_name')
+                download_url = json_object.get('download_url')
+                if tag_name in tag_names:
+                    proge_links.append(download_url)
+            distro_class.proton_ge_all(links)
+
+                    
 
 class Window(Gtk.ApplicationWindow):
     @property
@@ -116,7 +145,9 @@ class Window(Gtk.ApplicationWindow):
             'Proton-Ge': [
                 'https://api.github.com/repos/GloriousEggroll/' +
                 'proton-ge-custom/releases',
-                None
+                None,  # button object
+                None,  # version selector window
+                None   # GtkTreeView
                 ]
             }
 
@@ -189,8 +220,13 @@ class Window(Gtk.ApplicationWindow):
             select_vendor_button.set_active_id(
                 self.gpu_vendor)
 
-    def multiple_rel_programs(self):
+    def create_ver_selector(self, api_link, program_name):
         """
-        Makes the window to choose which versions
-        of the program u want to install (example: proton-ge)
+        Creates lutris like version selector
         """
+        self.releases_data = multi.get_release_data(api_link)
+        selector = widgets.ReleaseSelector(
+            program_name, self.releases_data, self.handler
+            )
+        return selector, selector.tree_view.store
+        
