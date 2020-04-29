@@ -182,8 +182,8 @@ class Arch(All):
 
     def __init__(self):
         self.gpu_vendor = None
-        self._top_commands = []
-        self._packages = []
+        self._top_commands = list()
+        self._packages = list()
         self._after = {'vkbasalt': [False, All]}
         self._ypackage = None
         self._yay()
@@ -334,8 +334,8 @@ class Fedora(All):
 
     def __init__(self):
         self.gpu_vendor = None
-        self._packages = []
-        self._top_commands = []
+        self._packages = list()
+        self._top_commands = list()
         self._fedora_ver = float(distro.version())
         self._after = {
             'vkbasalt': [False, All],
@@ -417,7 +417,8 @@ class Solus(All):
 
     def __init__(self):
         self.gpu_vendor = None
-        self._packages = []
+        self._top_commands = list()
+        self._packages = list()
         self._after = {'vkbasalt': [False, All]}
         super().__init__()
 
@@ -469,8 +470,8 @@ class Ubuntu(All):
 
     def __init__(self):
         self.gpu_vendor = None
-        self._packages = []
-        self._top_commands = []
+        self._packages = list()
+        self._top_commands = list()
         self._after = {
             'vkbasalt': [False, All],
             'gamemode': [False, All, '-y']
