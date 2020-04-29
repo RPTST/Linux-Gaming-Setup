@@ -325,6 +325,7 @@ class Fedora(All):
     Fedora install class
     """
     __slots__ = (
+        'gpu_vendor',
         '_packages',
         '_top_commands',
         '_fedora_ver',
@@ -332,6 +333,7 @@ class Fedora(All):
         )
 
     def __init__(self):
+        self.gpu_vendor = None
         self._packages = []
         self._top_commands = []
         self._fedora_ver = float(distro.version())
@@ -408,11 +410,13 @@ class Solus(All):
     Solus install class
     """
     __slots__ = (
+        'gpu_vendor',
         '_packages',
         '_after'
         )
 
     def __init__(self):
+        self.gpu_vendor = None
         self._packages = []
         self._after = {'vkbasalt': [False, All]}
         super().__init__()
@@ -456,6 +460,7 @@ class Ubuntu(All):
     Ubuntu install class
     """
     __slots__ = (
+        'gpu_vendor',
         '_packages',
         '_top_commands',
         '_after',
@@ -463,6 +468,7 @@ class Ubuntu(All):
         )
 
     def __init__(self):
+        self.gpu_vendor = None
         self._packages = []
         self._top_commands = []
         self._after = {
