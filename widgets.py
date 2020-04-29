@@ -17,7 +17,7 @@ class ProgramBox(Gtk.VBox):
 
     @property
     def new_button(self):
-        btn = Gtk.Button("Install")
+        btn = Gtk.Button("Choose")
         btn.set_name(self.program_name)
         return btn
 
@@ -45,19 +45,18 @@ class FlowBox(Gtk.FlowBox):
     """
     FlowBox element which is used for program boxes
     """
-    def __init__(self, _class):
+    def __init__(self, objects):
         Gtk.FlowBox.__init__(self)
         self.set_homogeneous(False)
         self.set_selection_mode(Gtk.SelectionMode.NONE)
         self.set_min_children_per_line(0)
         self.set_max_children_per_line(5)
 
-        self.add_programs(_class)
+        self.add_programs(objects)
 
-    def add_programs(self, _class):
-        # _class = Window
-        toggle_programs = _class.toggle_programs
-        popout_programs = _class.popout_programs
+    def add_programs(self, objects):
+        toggle_programs = objects[0]
+        popout_programs = objects[1]
         if toggle_programs:
             for _program in toggle_programs:
                 _box = ProgramBox(_program, 'click_install')
@@ -70,11 +69,11 @@ class FlowBox(Gtk.FlowBox):
                 btn_obj = _box.button
                 popout_programs[_program][1] = btn_obj
                 self.add(_box)
-                btn_obj.connect("clicked", _class.handler.choose_release)
+                btn_obj.connect("clicked", objects[2].choose_release)
 
                 # create the version selector window
                 api_link = popout_programs[_program][0]
-                selector, tree_store = _class.create_ver_selector(
+                selector, tree_store = objects[3](
                     api_link, _program
                     )
                 popout_programs[_program][2] = selector
@@ -110,15 +109,12 @@ class ReleaseSelector(Gtk.ApplicationWindow):
     """
     def __init__(self, program_name, json_objects, handler):
         Gtk.Window.__init__(self)
+        self.set_title = ("Manage " + program_name + " versions") # fixme: not working
         self.set_deletable(False)
-        self.set_decorated(False)
         self.program_name = program_name
         self.json_objects = json_objects
-        self.handler = handler
         self.hide_on_delete()
         self.set_default_size(250, 300)
-
-        self.set_title = ("Manage", program_name, "versions")
         self.tree_view = TreeView(self.json_objects)
 
         self.add(self.body())
@@ -128,6 +124,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
             label = Gtk.Label()
             text = self.program_name + " version managment."
             label.set_text(text)
+            label.set_margin_bottom(10)
             return label
 
         def scroll_tree_view():
@@ -136,12 +133,17 @@ class ReleaseSelector(Gtk.ApplicationWindow):
             return scrolled_win
 
         def bottom_button():
-            button = Gtk.Button("OK")
+            button = Gtk.Button("Hide")
             button.connect("clicked", self.on_destroy)
             button.set_halign(Gtk.Align.END)
+            button.set_margin_top(5)
             return button
 
         box = Gtk.VBox()
+        box.set_margin_top(10)
+        box.set_margin_bottom(10)
+        box.set_margin_right(10)
+        box.set_margin_left(10)
         box.pack_start(top_label(), False, True, 0)
         box.pack_start(scroll_tree_view(), True, True, 0)
         box.pack_end(bottom_button(), False, False, 0)

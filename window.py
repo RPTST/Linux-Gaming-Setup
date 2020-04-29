@@ -203,7 +203,14 @@ class Window(Gtk.ApplicationWindow):
     def body(self):
         vbox = Gtk.VBox()
         vbox.set_homogeneous(False)
-        flowbox = widgets.FlowBox(self)
+        objects = [
+                self.toggle_programs,
+                self.popout_programs,
+                self.handler,
+                self.crate_rele_sel
+                ]
+
+        flowbox = widgets.FlowBox(objects)
         vbox.pack_start(flowbox, False, True, 0)
 
         def do_buttons_box():
@@ -257,9 +264,9 @@ class Window(Gtk.ApplicationWindow):
             select_vendor_button.set_active_id(
                 self.gpu_vendor)
 
-    def create_ver_selector(self, api_link, program_name):
+    def crate_rele_sel(self, api_link, program_name):
         """
-        Creates lutris like version selector
+        Creates lutris like release selector for a specific program
         """
         self.releases_data = multi.get_release_data(api_link)
         selector = widgets.ReleaseSelector(
