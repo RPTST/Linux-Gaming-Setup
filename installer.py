@@ -37,7 +37,7 @@ to install selected programs & required packages
 """
 
 
-class All:
+class All(object):
     """
     Installer where distro doesnt matter
     """
@@ -58,21 +58,21 @@ class All:
             "https://github.com/DadSchoorse/vkbasalt/" +
             "releases/latest/download/vkbasalt.tar.gz"
             )
-        print("downloading vkBasalt.tar.gz and extracting it to ~/Programs")
-        multi.download_extract(download_link, self.programs_folder)
+        print("downloading vkBasalt.tar.gz and extracting it to ~/Programs/tmp")
+        multi.download_extract(download_link, self.programs_folder + '/tmp')
 
         print("Building and configuring it like Chris Titus Tech did.\n")
         subprocess.Popen(
             (
-                'make' f'{self.programs_folder}tmp/vkBasalt',
-                '&&',
-                'make', f'{self.programs_folder}tmp/vkBasalt',
-                'install'
-                ),
-            stdout=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+                'make', f'{self.programs_folder}/tmp/vkBasalt'
+                )
             ).wait()
+        subprocess.Popen(
+            (
+                'make', f'{self.programs_folder}/tmp/vkBasalt',
+                'install'
+            )
+        ).wait()
 
         with open(
                 f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf',
@@ -86,7 +86,7 @@ class All:
             config_file.close()
 
         print("Removing folder ./tmp")
-        shutil.rmtree(f'{self.current_folder}/tmp/vkBasalt')
+        shutil.rmtree(self.programs_folder + '/tmp/vkBasalt')
 
     def gamemode_all(self, last_arg):
         download_path = self.programs_folder + '/tmp'
@@ -98,11 +98,10 @@ class All:
         dl_link = multi.get_release_data(
             api_link,
             'last'
-            ).get('download_url')
+            )[0].get('download_url')
 
         print("Cloning Gamemode.")
         
-        multi.get_release_data()
         multi.download_extract(dl_link, download_path)
         print("Building gamemode.")
         subprocess.Popen(
@@ -127,7 +126,7 @@ class All:
         for key, value in self._after.items():
             if value[0]:
                 self = value[1]()
-                getattr(self, key)(value[2])
+                getattr(self, key)()
 
     @staticmethod
     def create_install_cmd_all(command, insert_int, packages):
@@ -184,7 +183,7 @@ class Arch(All):
         self.gpu_vendor = None
         self._top_commands = list()
         self._packages = list()
-        self._after = {'vkbasalt': [False, All]}
+        self._after = {'vkbasalt_all': [False, All]}
         self._ypackage = None
         self._yay()
         if not self._ypackage:
@@ -299,7 +298,7 @@ class Arch(All):
                 'lib32-libx11', 'libx11'
                 ]:
             self._packages.append(vkbasalt_package)
-        self._after['vkbasalt'][0] = True
+        self._after['vkbasalt_all'][0] = True
 
     def gamemode(self):
         print("Returning gamemode packages")
@@ -382,7 +381,7 @@ class Fedora(All):
             self._top_commands.append(command)
 
     def vkbasalt(self):
-        self._after['vkbasalt'][0] = True
+        self._after['vkbasalt_all'][0] = True
         for package in (
                 'vulkan-tools', 'glslang', 'libX11-devel',
                 'glibc-devel.i686', 'libstdc++-devel.i686',
@@ -411,6 +410,7 @@ class Solus(All):
     """
     __slots__ = (
         'gpu_vendor',
+        '_top_commands',
         '_packages',
         '_after'
         )
@@ -419,7 +419,7 @@ class Solus(All):
         self.gpu_vendor = None
         self._top_commands = list()
         self._packages = list()
-        self._after = {'vkbasalt': [False, All]}
+        self._after = {'vkbasalt_all': [False, All]}
         super().__init__()
 
     def lutris(self):
@@ -437,7 +437,7 @@ class Solus(All):
             self._packages.append(package)
 
     def vkbasalt(self):
-        self._after['vkbasalt'][0] = True
+        self._after['vkbasalt_all'][0] = True
         for package in [
                 'vulkan-tools', 'glslang', 'libX11-devel',
                 'glibc-devel', 'libstdc++', 'spirv-tools'
@@ -550,7 +550,7 @@ class Ubuntu(All):
 
     def vkbasalt(self):  # fixme
         # test on other ubuntu versions
-        self._after['vkbasalt'][0] = True
+        self._after['vkbasalt_all'][0] = True
         if 'eoan' in distro.codename().lower():
             for package in [
                     'build-essential', 'glslang-tools',

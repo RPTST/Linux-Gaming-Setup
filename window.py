@@ -10,6 +10,8 @@ import widgets
 import multi
 import subprocess
 import threading
+import shutil
+import glob
 
 
 class Handler:
@@ -58,7 +60,8 @@ class Handler:
     def install_programs(self):
         to_install = self.window.get_active_toggle_btn()
         distro_class = self.window.distro_class()
-        if to_install:
+        def toggle_programs():
+            nonlocal distro_class, to_install
             print("Installing programs")
             distro_class.gpu_vendor = self.window.gpu_vendor.lower()
             for _program in to_install:
@@ -78,30 +81,40 @@ class Handler:
             process.stdin.write(b'y\n')
             process.kill()
             distro_class.last_all()
+        print("Installing latest selected programs")
+        toggle_programs()
 
-        popout_programs = self.window.popout_programs
-        if popout_programs:
-            print("Installing certain program versions")
-            tag_names = list()
-            proge_links = list()  # proton-ge download links
-            for program in popout_programs:
-                store = popout_programs.get(program)[3]
-                cells_n = len(store)
-                for i in range(0, cells_n):
-                    if list(store)[i][0]:
-                        tag_names.append(list(store)[i][1])
+        def install_certain_rel():
+            nonlocal distro_class
+            popout_programs = self.window.popout_programs
+            if popout_programs:
+                
+                tag_names = list()
+                proge_links = list()  # proton-ge download links
+                for program in popout_programs:
+                    store = popout_programs.get(program)[3]
+                    cells_n = len(store)
+                    for i in range(0, cells_n):
+                        if list(store)[i][0]:
+                            tag_names.append(list(store)[i][1])
 
-            for json_object in self.window.releases_data:
-                tag_name = json_object.get('tag_name')
-                download_url = json_object.get('download_url')
-                if tag_name in tag_names:
-                    proge_links.append(download_url)
-            distro_class.proton_ge_all(proge_links)
+                for json_object in self.window.releases_data:
+                    tag_name = json_object.get('tag_name')
+                    download_url = json_object.get('download_url')
+                    if tag_name in tag_names:
+                        proge_links.append(download_url)
+                distro_class.proton_ge_all(proge_links)
+        print("Checking for certain program releases")
+        install_certain_rel()
 
     def install(self, *args):
-        thread = threading.Thread(target=self.install_programs)
-        thread.start()
-                    
+        self.thread = threading.Thread(target=self.install_programs)
+        self.thread.start()
+        self.thread.join()
+        print("deleting install.sh")
+        os.remove(self.window.current_path + 'install.sh')
+        os.remove(self.window.current_path + 'install')
+        self.reset()
 
 class Window(Gtk.ApplicationWindow):
     @property
