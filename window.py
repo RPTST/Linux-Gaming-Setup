@@ -118,7 +118,17 @@ class Window(Gtk.ApplicationWindow):
                 print_name(distribution.__name__)
                 return distribution
         else:
-            distribution = getattr(installer, distro.like().capitalize())
+            def distribution():
+                _like = distro.like()
+                _id = distro.id()
+                if _like:
+                    return _like
+                elif _id:
+                    return _id
+                else:
+                    raise SystemError("Distribution not recognized")
+
+            distribution = getattr(installer, )
             print_name(distribution.__name__)
             return distribution
 
