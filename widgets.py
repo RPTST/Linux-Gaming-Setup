@@ -189,4 +189,7 @@ class TreeView(Gtk.TreeView):
 
     def on_cell_toggled(self, widget, path):
         self.store[path][0] = not self.store[path][0]
-        
+
+
+class DownloadingStatus(Gtk.ApplicationWindow):
+    pass

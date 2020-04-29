@@ -129,20 +129,20 @@ class All:
         return ' '.join(command)
 
     @staticmethod
-    def create_install_script_all(create_icmd):
+    def create_install_script_all(create_icmd, _packages, _top_commands):
         """
         Creates the install.sh file
         """
         install_cmd = All.create_install_cmd_all(
             create_icmd[0],
             create_icmd[1],
-            self._packages
+            _packages
             )
         with open('./install.sh', 'a') as script_file:
             script_file.write("echo 'Install script executed'\n")
-            if self._top_commands:
+            if _top_commands:
                 script_file.write("echo 'Top command/s executed'\n")
-                for _top_cmd in self._top_commands:
+                for _top_cmd in _top_commands:
                     script_file.write(_top_cmd + '\n')
             if create_icmd[1]:
                 script_file.write("echo 'Packages are being downloaded'\n")
@@ -306,7 +306,7 @@ class Arch(All):
             '--nocleanmenu', '--nodiffmenu', '--noeditmenu'
             ]
         All.create_install_script_all(
-            [command, 2]
+            [command, 2], self._packages, self._top_commands
             )
 
 

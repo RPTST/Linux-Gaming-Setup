@@ -8,6 +8,8 @@ import installer
 import info
 import widgets
 import multi
+import subprocess
+import threading
 
 
 class Handler:
@@ -53,40 +55,52 @@ class Handler:
             btn_obj.set_active(False)
         
 
-    def install(self, *args):
-        distro_class = self.window.distro_class()
-        distro_class.gpu_vendor = self.window.gpu_vendor.lower()
+    def install_programs(self):
         to_install = self.window.get_active_toggle_btn()
-        for _program in to_install:
-            program = _program.replace('-', '_').lower()
-            function = getattr(distro_class, program)
-            function()
-        distro_class.create_install_script_all()
-        subprocess.Popen(
-            (
-                'pkexec',
-                'sh',
-                self.window.current_path + 'install.sh'
+        distro_class = self.window.distro_class()
+        if to_install:
+            print("Installing programs")
+            distro_class.gpu_vendor = self.window.gpu_vendor.lower()
+            for _program in to_install:
+                program = _program.replace('-', '_').lower()
+                function = getattr(distro_class, program)
+                function()
+            distro_class.create_install_script()
+            process = subprocess.Popen(
+                (
+                    'pkexec',
+                    'sh',
+                    self.window.current_path + 'install.sh'
+                    ),
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE
                 )
-            )
+            process.stdin.write(b'y\n')
+            process.kill()
+            distro_class.last_all()
 
-        store = self.window.popout_programs.get(program)[3]
-        if len(store):
+        popout_programs = self.window.popout_programs
+        if popout_programs:
+            print("Installing certain program versions")
             tag_names = list()
             proge_links = list()  # proton-ge download links
-            for program in self.window.popout_programs:
+            for program in popout_programs:
+                store = popout_programs.get(program)[3]
                 cells_n = len(store)
                 for i in range(0, cells_n):
                     if list(store)[i][0]:
                         tag_names.append(list(store)[i][1])
 
-            for json_onject in self.releases_data:
+            for json_object in self.window.releases_data:
                 tag_name = json_object.get('tag_name')
                 download_url = json_object.get('download_url')
                 if tag_name in tag_names:
                     proge_links.append(download_url)
-            distro_class.proton_ge_all(links)
+            distro_class.proton_ge_all(proge_links)
 
+    def install(self, *args):
+        thread = threading.Thread(target=self.install_programs)
+        thread.start()
                     
 
 class Window(Gtk.ApplicationWindow):

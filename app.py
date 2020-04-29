@@ -7,3 +7,4 @@ win = window.Window()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
 Gtk.main()
+del win
