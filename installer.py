@@ -401,7 +401,7 @@ class Fedora(All):
     def create_install_script(self):
         command = ['dnf', 'install', '-y']
         All.create_install_script_all(
-            [command, 2]
+            [command, 2], self._packages, self._top_commands
             )
 
 
@@ -451,7 +451,7 @@ class Solus(All):
     def create_install_script(self):
         command = ['eopkg', 'install', '-y']
         All.create_install_script_all(
-            [command, 2]
+            [command, 2], self._packages, self._top_commands
             )
 
 
@@ -571,5 +571,5 @@ class Ubuntu(All):
         command = ['apt', 'install', '-y']
         self._top_commands.append('apt update')
         All.create_install_script_all(
-            [command, 2]
+            [command, 2], self._packages, self._top_commands
             )
