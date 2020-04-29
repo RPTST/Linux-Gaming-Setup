@@ -35,7 +35,7 @@ def get_release_data(api_link, releases='every'):
             )
 
     def every():
-        nonlocal egs_releases, json_objects
+        nonlocal json_objects
         for json_object in json_objects:
             add_data(json_object)
 
@@ -44,7 +44,7 @@ def get_release_data(api_link, releases='every'):
         If prelease is the last release it adds the release data
         and it adds the last release's data so the user can choose
         """
-        nonlocal egs_releases, json_objects
+        nonlocal json_objects
         counter = 0
 
         def is_prerelease(json_object):
@@ -65,9 +65,14 @@ def get_release_data(api_link, releases='every'):
 
             counter += 1
 
+    def last():
+        nonlocal json_objects
+        add_data(json_objects[0])
+
     prereleases_options = {
         'every': every,
-        'conditional': conditional_last
+        'conditional': conditional_last,
+        'last': last
         }
     prereleases_options.get(releases)()
     return egs_releases

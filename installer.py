@@ -89,11 +89,21 @@ class All:
         shutil.rmtree(f'{self.current_folder}/tmp/vkBasalt')
 
     def gamemode_all(self, last_arg):
-        gamemode_path = f'{self.programs_folder}/Gamemode'
-        link = 'https://github.com/FeralInteractive/gamemode.git'
+        download_path = self.programs_folder + '/tmp'
+        gamemode_path = download_path + '/Gamemode'
+        api_link = (
+            'https://api.github.com/repos/' +
+            'FeralInteractive/Gamemode/releases'
+            )
+        dl_link = multi.get_release_data(
+            api_link,
+            'last'
+            ).get('download_url')
 
         print("Cloning Gamemode.")
-        multi.get_release_data(link, 'first', 1)
+        
+        multi.get_release_data()
+        multi.download_extract(dl_link, download_path)
         print("Building gamemode.")
         subprocess.Popen(
             (
