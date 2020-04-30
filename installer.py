@@ -75,7 +75,7 @@ class All(object):
         ).wait()
 
         with open(
-                f'/home/{os.getlogin()}/.local/share/vkBasalt/vkBasalt.conf',
+                os.path.expanduser('~/.local/share/vkBasalt/vkBasalt.conf'),
                 'r+'
                 ) as config_file:
             config = config_file.readlines()
