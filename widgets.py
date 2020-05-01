@@ -62,6 +62,7 @@ class FlowBox(Gtk.FlowBox):
                 _box = ProgramBox(_program, 'click_install')
                 self.add(_box)
                 toggle_programs[_program] = _box.button
+                _box.button.connect("clicked", objects[2].toggl_nec_programs)
 
         if popout_programs:
             for _program in popout_programs:

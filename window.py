@@ -49,6 +49,16 @@ class Handler:
             )[2]
         selector.show_all()
 
+    def toggl_nec_programs(self, button):
+        name = button.get_name()
+        print(name)
+        active = button.get_active()
+        if active and name in self.window.brother_programs:
+            brother_program = self.window.brother_programs.get(name)
+            button_obj = self.window.toggle_programs.get(brother_program)
+            button_obj.set_active(True)
+
+
     def reset(self, *args):
         to_reset = self.window.get_active_toggle_btn()
         toggle_programs = self.window.toggle_programs
@@ -175,6 +185,7 @@ class Window(Gtk.ApplicationWindow):
             self.handler
             )
         self.toggle_programs = {
+            'Wine': None,
             'Lutris': None,
             'Steam': None,
             'vkBasalt': None,
@@ -188,6 +199,9 @@ class Window(Gtk.ApplicationWindow):
                 None,  # version selector window
                 None   # GtkTreeView
                 ]
+            }
+        self.brother_programs = {
+            'Lutris': 'Wine',
             }
 
 
