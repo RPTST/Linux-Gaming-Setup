@@ -53,6 +53,14 @@ class All(object):
         self.create_folder(self.programs_folder)
         self.create_folder(self.programs_folder + '/tmp')
 
+    def create_folder(self, path):
+        try:
+            os.makedirs(os.path.expanduser(path))
+            print("Folder created at this path:" + path)
+
+        except FileExistsError:
+            print(f"It seems that the {path} folder has already been created.")
+
     def vkbasalt_all(self):
         download_link = (
             "https://github.com/DadSchoorse/vkbasalt/" +
@@ -156,15 +164,6 @@ class All(object):
             if create_icmd[1]:
                 script_file.write("echo 'Packages are being downloaded'\n")
                 script_file.write(install_cmd + '\n')
-
-    @staticmethod
-    def create_folder(path):
-        try:
-            os.mkdir(os.path.expanduser(path))
-            print("Folder created at this path:" + path)
-
-        except FileExistsError:
-            print(f"It seems that the {path} folder has already been created.")
 
 
 class Arch(All):
