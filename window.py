@@ -3,7 +3,6 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio
 import os
 import webbrowser
-import distro
 import installer
 import info
 import widgets
@@ -12,6 +11,7 @@ import subprocess
 import threading
 import shutil
 import glob
+import distro
 
 
 class Handler:
@@ -108,9 +108,11 @@ class Handler:
         install_certain_rel()
 
     def install(self, *args):
-        self.thread = threading.Thread(target=self.install_programs)
-        self.thread.start()
-        self.thread.join()
+        # fixme
+        # self.thread = threading.Thread(target=self.install_programs)
+        # self.thread.start()
+        # self.thread.join()
+        self.install_programs()
         print("deleting install.sh")
         os.remove(self.window.current_path + 'install.sh')
         os.remove(self.window.current_path + 'install')
