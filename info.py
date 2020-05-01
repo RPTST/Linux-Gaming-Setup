@@ -4,7 +4,7 @@ import distro
 
 __all__ = ('Distribution', 'GraphicsCard', 'Processor')
 
-
+# not used
 class Distribution:
     __slots__ = ('_distro', '_distro_info', '__weakref__')
 
@@ -19,8 +19,11 @@ class Distribution:
         self._distro_info = list(distro.linux_distribution())
 
     def _get_distro(self):
-        return {"based": distro.like(), "distribution": self._distro_info[2],
-                "distro_version": self._distro_info[1]}
+        return {
+            "based": distro.like(),
+            "id": distro.id(),
+            "distro_version": self._distro_info[1]
+            }
 
 
 class GraphicsCard:
