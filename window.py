@@ -43,7 +43,7 @@ class Handler:
             'https://github.com/lutris/lutris'
             )
 
-    def choose_release(self, button):  # fixme
+    def choose_release(self, button):
         selector = self.window.popout_programs.get(
             button.get_name()
             )[2]
@@ -51,7 +51,6 @@ class Handler:
 
     def toggl_nec_programs(self, button):
         name = button.get_name()
-        print(name)
         active = button.get_active()
         if active and name in self.window.brother_programs:
             brother_program = self.window.brother_programs.get(name)
@@ -65,40 +64,62 @@ class Handler:
         for program_name in to_reset:
             btn_obj = toggle_programs.get(program_name)
             btn_obj.set_active(False)
-        
 
     def install_programs(self):
-        to_install = self.window.get_active_toggle_btn()
-        distro_class = self.window.distro_class()
+        distro_class = self.window.distro_class(
+            self.window.gpu_vendor.lower()
+        )
+
         def toggle_programs():
-            nonlocal distro_class, to_install
+            nonlocal distro_class
             print("Installing programs")
-            distro_class.gpu_vendor = self.window.gpu_vendor.lower()
-            for _program in to_install:
-                program = _program.replace('-', '_').lower()
-                function = getattr(distro_class, program)
-                function()
-            distro_class.create_install_script()
-            process = subprocess.Popen(
-                (
-                    'pkexec',
-                    'sh',
-                    self.window.current_path + 'install.sh'
-                    ),
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE
-                )
-            process.stdin.write(b'y\n')
-            process.kill()
+
+            to_install = self.window.get_active_toggle_btn()
+            if to_install:
+                programs = list()
+                for _program in to_install:
+                    program = _program.replace('-', '_').lower()
+                    programs.append(program)
+                distro_class.install_script(programs)
+
+            if distro_class.__class__.__name__ == 'Arch':
+                process = subprocess.Popen(
+                        (
+                            'sh',
+                            self.window.current_path + 'main_install.sh'
+                            ),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
+                process.stdin.write(b'Y\n')
+                process.wait()
+
+            else:
+                process = subprocess.Popen(
+                        (
+                            'pkexec',
+                            'sh',
+                            self.window.current_path + 'main_install.sh'
+                            ),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
+                process.stdin.write(b'Y\n')
+                process.wait()
+
             distro_class.last_all()
-        print("Installing latest selected programs")
+
         toggle_programs()
+
+        print("\n")
 
         def install_certain_rel():
             nonlocal distro_class
             popout_programs = self.window.popout_programs
             if popout_programs:
-                
+
                 tag_names = list()
                 proge_links = list()  # proton-ge download links
                 for program in popout_programs:
@@ -114,18 +135,17 @@ class Handler:
                     if tag_name in tag_names:
                         proge_links.append(download_url)
                 distro_class.proton_ge_all(proge_links)
+
         print("Checking for certain program releases")
         install_certain_rel()
 
-    def install(self, *args):
-        # fixme
-        # self.thread = threading.Thread(target=self.install_programs)
-        # self.thread.start()
-        # self.thread.join()
-        self.install_programs()
         print("deleting install.sh")
-        os.remove(self.window.current_path + 'install.sh')
-        os.remove(self.window.current_path + 'install')
+        os.remove(self.window.current_path + 'main_install.sh')
+
+
+    def install(self, *args):
+        thread = threading.Thread(target=self.install_programs)
+        thread.start()
         self.reset()
 
 class Window(Gtk.ApplicationWindow):
@@ -220,11 +240,11 @@ class Window(Gtk.ApplicationWindow):
         vbox = Gtk.VBox()
         vbox.set_homogeneous(False)
         objects = [
-                self.toggle_programs,
-                self.popout_programs,
-                self.handler,
-                self.crate_rele_sel
-                ]
+            self.toggle_programs,
+            self.popout_programs,
+            self.handler,
+            self.crate_rele_sel
+            ]
 
         flowbox = widgets.FlowBox(objects)
         vbox.pack_start(flowbox, False, True, 0)
@@ -241,10 +261,10 @@ class Window(Gtk.ApplicationWindow):
             do_buttons_box.pack_end(button_install, True, True, 0)
             return do_buttons_box
         vbox.pack_end(do_buttons_box(), False, False, 0)
-        
+
         self.add(vbox)
 
-    
+
     def get_active_toggle_btn(self):
         """
         Gets programs to install by checking if the
@@ -253,7 +273,7 @@ class Window(Gtk.ApplicationWindow):
         programs = list()
         for button_obj in self.toggle_programs.values():
             if button_obj.get_active():
-                program_name = button_obj.get_name().replace('-', '_')
+                program_name = button_obj.get_name().replace('-', '_').lower()
                 programs.append(program_name)
         return programs
 
@@ -289,4 +309,15 @@ class Window(Gtk.ApplicationWindow):
             program_name, self.releases_data, self.handler
             )
         return selector, selector.tree_view.store
+
+    def show_all_(self):
+        self.connect("destroy", self.stop)
+        self.show_all()
+        Gtk.main()
+
+    def start(self):
+        self.show_all_()
+
+    def stop(self, *args):
+        Gtk.main_quit()
         

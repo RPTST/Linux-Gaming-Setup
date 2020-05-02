@@ -4,40 +4,15 @@ import shutil
 import distro
 import multi
 
-
-# Lutris
-"""
-Adds packages needed for games to
-be played on Linux (wine + dependencies) and
-Lutris of course
-"""
-
-# Steam
-"""
-Returns steam packages and
-steam proton for made by GloriousEggroll
-"""
-
-# vkBasalt
-"""
-Vkbasalt is a program which makes gaming
-gaming better and makes games look much better
-"""
-
-# Gamemode
-"""
-Returns packages for this awesome program made by
-FeralGaming which adds some extra performance/fps
-"""
-
-# Create ainstall script
-"""
-Creates an install script
-to install selected programs & required packages
-"""
+class PackageNotFound(Exception):
+    pass
 
 
-class All(object):
+class GpuNotSupported(Exception):
+    pass
+
+
+class All:
     """
     Installer where distro doesnt matter
     """
@@ -50,7 +25,6 @@ class All(object):
     def __init__(self):
         self.current_folder = f'{os.path.dirname(os.path.abspath(__file__))}/'
         self.programs_folder = os.path.expanduser('~/Programs')
-        self.create_folder(self.programs_folder)
         self.create_folder(self.programs_folder + '/tmp')
 
     def create_folder(self, path):
@@ -109,7 +83,7 @@ class All(object):
             )[0].get('download_url')
 
         print("Cloning Gamemode.")
-        
+
         multi.download_extract(dl_link, download_path)
         print("Building gamemode.")
         subprocess.Popen(
@@ -145,96 +119,93 @@ class All(object):
             command.insert(insert_int, package)
         return ' '.join(command)
 
-    @staticmethod
-    def create_install_script_all(create_icmd, _packages, _top_commands):
+    def create_install_script_all(self, create_icmd, _packages, _top_commands):
         """
         Creates the install.sh file
         """
-        install_cmd = All.create_install_cmd_all(
-            create_icmd[0],
-            create_icmd[1],
-            _packages
-            )
-        with open('./install.sh', 'a') as script_file:
-            script_file.write("echo 'Install script executed'\n")
-            if _top_commands:
-                script_file.write("echo 'Top command/s executed'\n")
-                for _top_cmd in _top_commands:
-                    script_file.write(_top_cmd + '\n')
-            if create_icmd[1]:
-                script_file.write("echo 'Packages are being downloaded'\n")
-                script_file.write(install_cmd + '\n')
+        if create_icmd[1]:
+            install_cmd = All.create_install_cmd_all(
+                create_icmd[0],
+                create_icmd[1],
+                _packages
+                )
+
+        if self.__class__.__base__.__name__ == 'Arch':
+            print("Arch installer script")
+            with open('./main_install.sh', 'a') as script_file:
+                script_file.write("echo 'Install script executed'\n")
+                if create_icmd[1]:
+                    script_file.write(install_cmd + "\n")
+                    script_file.write('pkexec sh _top_commands')
+                    os.path.isfile('./main_install.sh')
+
+        else:
+            print("Installer script for all other distros")
+            with open('./main_install.sh', 'a') as script_file:
+                script_file.write("echo 'Install script executed'\n")
+                if _top_commands:
+                    script_file.write("echo 'Top command/s executed'\n")
+                    for _top_cmd in _top_commands:
+                        script_file.write(_top_cmd + '\n')
+                if create_icmd[1]:
+                    script_file.write("echo 'Packages are being downloaded'\n")
+                    script_file.write(install_cmd + '\n')
 
 
 class Arch(All):
-    """
-    Arch based install class
-    """
     __slots__ = (
-        'gpu_vendor',
-        '_top_commands',
-        '_packages',
-        '_after',
-        '_ypackage',
+        "gpu_vendor",
+        "_top_commands",
+        "_after"
         )
 
-    def __init__(self):
-        self.gpu_vendor = None
-        self._top_commands = list()
-        self._packages = list()
-        self._after = {'vkbasalt_all': [False, All]}
-        self._ypackage = None
-        self._yay()
-        if not self._ypackage:
-            raise Exception('Yay not found.')
+    def __init__(self, gpu_vendor):
         super().__init__()
+        self.gpu_vendor = gpu_vendor
+        self._top_commands = list()
+        self._after = {'vkbasalt_all': [False, All]}
+        if not self._check_yay():
+            raise PackageNotFound("Yay not installed")
 
-    def _yay(self):
+    def _check_yay(self):
         """
         Checks if yay installed and if it is not
         the command to be installed will be added to the top
         if the install scirpt
         """
-        self._ypackage = False
         packages = subprocess.getoutput("pacman --query").splitlines()
         for package in packages:
             if package.startswith("yay"):
-                self._ypackage = True
                 print("Yay found !")
-                break
+                return True
+        raise PackageNotFound("yay not installed !")
+
+    def wine(self):
+        for package in [
+                'lib32-opencl-icd-loader', 'libpng', 'gnutls',
+                'wine-staging', 'giflib', 'lib32-giflib', 'libpulse',
+                'lib32-libpng', 'libldap', 'lib32-libldap',
+                'lib32-gnutls', 'mpg123', 'lib32-mpg123', 'openal',
+                'lib32-openal', 'v4l-utils', 'lib32-v4l-utils',
+                'lib32-libpulse', 'libgpg-error', 'lib32-libgpg-error',
+                'alsa-plugins', 'lib32-alsa-plugins', 'alsa-lib', 'gtk3'
+                'lib32-alsa-lib', 'libjpeg-turbo', 'lib32-libjpeg-turbo',
+                'sqlite', 'lib32-sqlite', 'libxcomposite', 'lib32-gtk3',
+                'libxinerama', 'lib32-libgcrypt', 'libgcrypt',
+                'ncurses', 'lib32-ncurses', 'opencl-icd-loader',
+                'libxslt', 'lib32-libxslt', 'libva', 'lib32-libva',
+                'gst-plugins-base-libs', 'lib32-gst-plugins-base-libs',
+                'lib32-vulkan-icd-loader', 'lib32-libxcomposite',
+                'lib32-libxinerama', 'vulkan-icd-loader'
+                ]:
+            yield package
+
 
     def lutris(self):
-        if not self.gpu_vendor:
-            print(self.gpu_vendor)
-            raise SystemError("self.gpu_vendor is set to None ! report this")
-        self._top_commands.append(
-            "python -c 'import enableMultilib" +
-            ";enableMultilib.pacmanConf()'")
-        print("Trying to enable multilib in pacman.conf\n")
-
-        print("Returning wine & lutris packages\n")
-        lutris_packages = [
-            'lutris-git', 'lib32-opencl-icd-loader',
-            'wine-staging', 'giflib', 'lib32-giflib', 'libpng',
-            'lib32-libpng', 'libldap', 'lib32-libldap', 'gnutls',
-            'lib32-gnutls', 'mpg123', 'lib32-mpg123', 'openal',
-            'lib32-openal', 'v4l-utils', 'lib32-v4l-utils', 'libpulse',
-            'lib32-libpulse', 'libgpg-error', 'lib32-libgpg-error',
-            'alsa-plugins', 'lib32-alsa-plugins', 'alsa-lib', 'gtk3'
-            'lib32-alsa-lib', 'libjpeg-turbo', 'lib32-libjpeg-turbo',
-            'sqlite', 'lib32-sqlite', 'libxcomposite', 'lib32-gtk3',
-            'libxinerama', 'lib32-libgcrypt', 'libgcrypt',
-            'ncurses', 'lib32-ncurses', 'opencl-icd-loader',
-            'libxslt', 'lib32-libxslt', 'libva', 'lib32-libva',
-            'gst-plugins-base-libs', 'lib32-gst-plugins-base-libs',
-            'lib32-vulkan-icd-loader', 'lib32-libxcomposite',
-            'lib32-libxinerama', 'vulkan-icd-loader',
-            ]
-
-        print("checking gpu.")
+        yield "lutris-git"
         print(f"Returning packages for vulkan support on {self.gpu_vendor} gpu")
 
-        def amd_vulkan():
+        def amd():
             """
             Returns Vulkan packages for Amd gpus
             """
@@ -246,7 +217,7 @@ class Arch(All):
                 'lib32-vulkan-icd-loader'
                 ]
 
-        def nvidia_vulkan():
+        def nvidia():
             """
             Returns Vulkan packages for Nvidia gpus
             """
@@ -259,7 +230,7 @@ class Arch(All):
                 'lib32-vulkan-icd-loader'
                 ]
 
-        def intel_vulkan():
+        def intel():
             """
             Returns packages Vulkan packages for Intel igpus
             """
@@ -271,79 +242,75 @@ class Arch(All):
                 'lib32-vulkan-icd-loader'
                 ]
         vulkan = {
-            'amd': amd_vulkan,
-            'intel': intel_vulkan,
-            'nvidia': nvidia_vulkan
+            'amd': amd,
+            'intel': intel,
+            'nvidia': nvidia
             }
         for vulkan_package in vulkan.get(self.gpu_vendor)():  # for vulkan support
-            lutris_packages.append(vulkan_package)  # packages for gpu
-            for package in lutris_packages:
-                self._packages.append(package)
+            yield vulkan_package
 
     def steam(self):
-        print("Returning steam package.\n")
-        for steam_package in [
-                'steam-native-runtime', 'steam'
+        print("returning steam packages")
+        for package in [
+                'steam-native-runtime',
+                'steam'
                 ]:
-            self._packages.append(steam_package)
+            yield package
 
     def vkbasalt(self):
         print(
-            "Returning necressary dependencies " +
+            "Returning necressary dependencies",
             "for vkBasalt to work."
             )
-        for vkbasalt_package in [
+        for package in [
                 'glslang', 'vulkan-tools',
                 'lib32-libx11', 'libx11'
                 ]:
-            self._packages.append(vkbasalt_package)
+            yield package
         self._after['vkbasalt_all'][0] = True
+
 
     def gamemode(self):
         print("Returning gamemode packages")
-        for gamemode_package in [
+        for package in [
                 'gamemode-git', 'lib32-gamemode-git',
                 'meson', 'systemd-devel',
                 'pkg-config git', 'dbus-devel'
                 ]:
-            self._packages.append(gamemode_package)
+            yield package
 
-    def create_install_script(self):
+    def install_script(self, install_programs):
         command = [
-            'yay', '-S', '--redownloadall', '--sudoloop',
-            '--nocleanmenu', '--nodiffmenu', '--noeditmenu'
+            'yay', '-S', '--redownloadall', '--nosudoloop',
+            '--nocleanmenu', '--nodiffmenu', '--noeditmenu',
+            '--sudo', 'pkexec'
             ]
-        All.create_install_script_all(
-            [command, 2], self._packages, self._top_commands
-            )
+        packages = list()
+        for program in install_programs:
+            packages += list(getattr(self, program)())
+        self.create_install_script_all(
+            [command, 2], packages, self._top_commands)
 
 
 class Fedora(All):
-    """
-    Fedora install class
-    """
     __slots__ = (
-        'gpu_vendor',
-        '_packages',
-        '_top_commands',
-        '_fedora_ver',
-        '_after'
+        "_top_commands",
+        "_after",
+        "gpu_vendor"
         )
-
-    def __init__(self):
-        self.gpu_vendor = None
-        self._packages = list()
+    def __init__(self, gpu_vendor):
+        super().__init__()
         self._top_commands = list()
-        self._fedora_ver = float(distro.version())
         self._after = {
             'vkbasalt': [False, All],
             'gamemode': [False, All]
             }
-        super().__init__()
+        self.gpu_vendor = None
 
-    def lutris(self):
+    def wine(self):
+        fedora_ver = float(distro.version())
         print("Returning packages needed for lutris app.")
-        if self._fedora_ver == '31':
+        if fedora_ver == '31':
             self._top_commands.append(
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/31/winehq.repo'
@@ -351,17 +318,17 @@ class Fedora(All):
             for package in (
                     'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
                     'winetricks', 'lutris'):
-                self._packages.append(package)
+                yield package
 
-        elif self._fedora_ver == '30':
+        elif fedora_ver == '30':
             self._top_commands.append(
                 'dnf config-manager --add-repo' +
                 'https://dl.winehq.org/wine-builds/fedora/30/winehq.repo'
                 )
             for package in (
-                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
-                    'winetricks', 'lutris'):
-                self._packages.append(package)
+                    'winehq-staging', 'vulkan-loader',
+                    'vulkan-loader.i686', 'winetricks'):
+                yield package
 
         else:
             print(
@@ -370,14 +337,18 @@ class Fedora(All):
                 "\nPlease refer to https://wiki.winehq.org/Fedora ."
                 "\n#########################################################"
                 )
+            raise SystemError("This version of Fedora not supported yet")
+
+    def lutris(self):
+        yield 'lutris'
 
     def steam(self):
         print("Adding the steam package")
-        self._packages.append('steam')
         for command in (
                 'dnf install -y fedora-workstation-repositories',
                 'dnf install -y steam --enablerepo=rpmfusion-nonfree-steam'):
             self._top_commands.append(command)
+        yield 'steam'
 
     def vkbasalt(self):
         self._after['vkbasalt_all'][0] = True
@@ -385,7 +356,7 @@ class Fedora(All):
                 'vulkan-tools', 'glslang', 'libX11-devel',
                 'glibc-devel.i686', 'libstdc++-devel.i686',
                 'spirv-tools', 'libX11-devel.i686'):
-            self._packages.append(package)
+            yield package
 
     def gamemode(self):
         print(
@@ -394,46 +365,45 @@ class Fedora(All):
         for package in (
                 'meson', 'systemd-devel',
                 'pkg-config', 'git dbus-devel'):
-            self._packages.append(package)
+            yield package
 
-    def create_install_script(self):
+    def install_script(self, install_programs):
         command = ['dnf', 'install', '-y']
-        All.create_install_script_all(
-            [command, 2], self._packages, self._top_commands
+        packages = list()
+        for program in install_programs:
+            packages += list(getattr(self, program)())
+
+        self.create_install_script_all(
+            [command, 2], packages, self._top_commands
             )
 
 
 class Solus(All):
-    """
-    Solus install class
-    """
     __slots__ = (
-        'gpu_vendor',
-        '_top_commands',
-        '_packages',
-        '_after'
+        "_top_commands",
+        "_after"
         )
-
-    def __init__(self):
-        self.gpu_vendor = None
+    def __init__(self, gpu_vendor):
         self._top_commands = list()
-        self._packages = list()
         self._after = {'vkbasalt_all': [False, All]}
         super().__init__()
 
-    def lutris(self):
-        print("Adding lutris packages")
+    def wine(self):
         for package in [
                 'wine', 'wine-devel', 'wine-32bit-devel', 'winetricks',
                 'vulkan, vulkan-32bit, vulkan-headers'
                 ]:
-            self._packages.append(package)
+            yield package
+
+    def lutris(self):
+        print("Adding lutris packages")
+        yield 'lutris'
 
     def steam(self):
         for package in [
                 'steam', 'linux-steam-integration'
                 ]:
-            self._packages.append(package)
+            yield package
 
     def vkbasalt(self):
         self._after['vkbasalt_all'][0] = True
@@ -441,121 +411,120 @@ class Solus(All):
                 'vulkan-tools', 'glslang', 'libX11-devel',
                 'glibc-devel', 'libstdc++', 'spirv-tools'
                 ]:
-            self._packages.append(package)
+            yield package
 
     def gamemode(self):
         for package in [
                 'gamemode', 'gamemode-32bit']:
-            self._packages.append(package)
+            yield package
 
-    def create_install_script(self):
+    def install_script(self, install_programs):
         command = ['eopkg', 'install', '-y']
-        All.create_install_script_all(
-            [command, 2], self._packages, self._top_commands
+        packages = list()
+        for program in install_programs:
+            function = getattr(self, program)
+            packages += list(function())
+        self.create_install_script_all(
+            [command, 2], packages, self._top_commands
             )
 
 
 class Ubuntu(All):
-    """
-    Ubuntu install class
-    """
     __slots__ = (
-        'gpu_vendor',
-        '_packages',
-        '_top_commands',
-        '_after',
-        'version'
+        "gpu_vendor",
+        "_top_commands",
+        "_after",
+        "version"
         )
 
-    def __init__(self):
-        self.gpu_vendor = None
-        self._packages = list()
+    def __init__(self, gpu_vendor):
+        super().__init__()
+        self.gpu_vendor = gpu_vendor
         self._top_commands = list()
         self._after = {
             'vkbasalt': [False, All],
             'gamemode': [False, All, '-y']
             }
         self.version = distro.version()
-        super().__init__()
 
     def lutris(self):
-        def wine():
-            self._top_commands.append(
-                'add-apt-repository ppa:lutris-team/lutris'
+        self._top_commands.append(
+            'add-apt-repository ppa:lutris-team/lutris'
+            )
+        yield "lutris"
+
+    def wine(self):
+        for command in [
+                'dpkg --add-architecture i386',
+                'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
+                'apt-key add winehq.key']:
+            self._top_commands.append(command)
+
+        versions_repo = {
+            'eoan': (
+                "apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                "eoan main'"
+                ),
+            'disco': (
+                "apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                "disco main'"
+                ),
+            'cosmic': (
+                "apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                "cosmic main'"
+                ),
+            'bionic': (
+                "apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                "bionic main'"
+                ),
+            'xenial': (
+                "apt-add-repository " +
+                "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
+                "xenial main'"
                 )
-            for command in [
-                    'dpkg --add-architecture i386',
-                    'wget -nc https://dl.winehq.org/wine-builds/winehq.key',
-                    'apt-key add winehq.key']:
-                self._top_commands.append(command)
-            versions_repo = {
-                'eoan': (
-                    "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
-                    "eoan main'"
-                    ),
-                'disco': (
-                    "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
-                    "disco main'"
-                    ),
-                'cosmic': (
-                    "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
-                    "cosmic main'"
-                    ),
-                'bionic': (
-                    "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
-                    "bionic main'"
-                    ),
-                'xenial': (
-                    "apt-add-repository " +
-                    "'deb https://dl.winehq.org/wine-builds/ubuntu/ " +
-                    "xenial main'"
-                    )
-                }
-            for version in versions_repo:
-                if version in distro.codename().lower():
-                    repository = versions_repo.get(version)
-                    self._top_commands.append(repository)
-                    if version == 'eoan':
-                        self._top_commands.append(
-                            'apt install --install-recommends' +
-                            'wine-stable winehq-stable ' +
-                            'wine-stable wine-stable-i386 wine-stable-amd64 -y'
-                            )
-                    else:
-                        self._top_commands.append(
-                            'apt install --install-recommends winehq-stable -y'
-                            )
+            }
+        for version in versions_repo:
+            if version in distro.codename().lower():
+                repository = versions_repo.get(version)
+                self._top_commands.append(repository)
+                if version == 'eoan':
+                    self._top_commands.append(
+                        'apt install --install-recommends' +
+                        'wine-stable winehq-stable ' +
+                        'wine-stable wine-stable-i386 wine-stable-amd64 -y'
+                        )
                 else:
-                    raise SystemError("Version of ubuntu not recognized")
+                    self._top_commands.append(
+                        'apt install --install-recommends winehq-stable -y'
+                        )
+            else:
+                raise SystemError("Version of ubuntu not recognized")
 
-        wine()
-
-        # drivers
-        def amd_intel(vulkan):
+        def amd_intel():
             self._top_commands.append("dpkg --add-architecture i386")
-            self._packages.append("libgl1-mesa-dri:i386")
-            if vulkan:
-                for package in [
-                        "mesa-vulkan-drivers",
-                        "mesa-vulkan-drivers:i386"]:
-                    self._packages.append(package)
+            yield "libgl1-mesa-dri:i386"
+            for package in [
+                    "mesa-vulkan-drivers",
+                    "mesa-vulkan-drivers:i386"]:
+                yield package
+
+        def nvidia():
+            raise GpuNotSupported(
+                "This gpu is not supported yet for this program on the current",
+                "distro. Please report this !"
+                )
+
+        if self.gpu_vendor == 'amd' or 'intel':
+            amd_intel()
+        else:
+            nvidia()
 
     def steam(self):
-        self._packages.append('steam')
-
-    def vkbasalt(self):  # fixme
-        # test on other ubuntu versions
-        self._after['vkbasalt_all'][0] = True
-        if 'eoan' in distro.codename().lower():
-            for package in [
-                    'build-essential', 'glslang-tools',
-                    'vulkan-validationlayers-dev', 'libvulkan-dev',
-                    'vulkan-tools', 'spirv-tools']:
-                self._packages.append(package)
+        yield 'steam'
 
     def gamemode(self):
         for package in [
@@ -564,12 +533,14 @@ class Ubuntu(All):
                 'libdbus-1-dev', 'libinih-dev',
                 'git', 'dbus-user-session'
                 ]:
-            self._packages.append(package)
+            yield package
         self._after['gamemode'][0] = True
 
-    def create_install_script(self):
+    def install_script(self, install_programs):
         command = ['apt', 'install', '-y']
-        self._top_commands.append('apt update')
-        All.create_install_script_all(
-            [command, 2], self._packages, self._top_commands
+        packages = list()
+        for program in install_programs:
+            packages += list(getattr(self, program)())
+        self.create_install_script_all(
+            [command, 2], packages, self._top_commands
             )

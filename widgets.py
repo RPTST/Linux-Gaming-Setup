@@ -154,7 +154,6 @@ class ReleaseSelector(Gtk.ApplicationWindow):
         self.hide()
 
 
-
 class TreeView(Gtk.TreeView):
     def __init__(self, json_objects):
         Gtk.TreeView.__init__(self)
