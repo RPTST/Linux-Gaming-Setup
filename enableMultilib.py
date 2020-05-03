@@ -16,7 +16,7 @@ def _pacmanConf(path="/etc/pacman.conf"):
 
     for i, line in enumerate(data):
         if line.startswith("#[multilib]"):
-            data[i    ] = "[multilib]\n"
+            data[i] = "[multilib]\n"
             data[i + 1] = "Include = /etc/pacman.d/mirrorlist\n"
             break
     else:
