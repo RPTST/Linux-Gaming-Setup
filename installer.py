@@ -49,13 +49,6 @@ class All:
                 'make', f'{self.programs_folder}/tmp/vkBasalt'
                 )
             ).wait()
-        subprocess.Popen(
-            (
-                'make', f'{self.programs_folder}/tmp/vkBasalt',
-                'install'
-            )
-        ).wait()
-
         with open(
                 os.path.expanduser('~/.local/share/vkBasalt/vkBasalt.conf'),
                 'r+'
