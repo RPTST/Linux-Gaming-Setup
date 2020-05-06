@@ -55,30 +55,29 @@ class FlowBox(Gtk.FlowBox):
         self.add_programs(objects)
 
     def add_programs(self, objects):
-        toggle_programs = objects[0]
-        popout_programs = objects[1]
-        if toggle_programs:
-            for _program in toggle_programs:
+        if objects[0]:
+            for _program in objects[0]:
                 _box = ProgramBox(_program, 'click_install')
                 self.add(_box)
-                toggle_programs[_program] = _box.button
+                objects[0][_program] = _box.button
                 _box.button.connect("clicked", objects[2].toggl_nec_programs)
 
-        if popout_programs:
-            for _program in popout_programs:
+        if objects[1]:
+            for _program in objects[1]:
                 _box = ProgramBox(_program, 'show_releases')
                 btn_obj = _box.button
-                popout_programs[_program][1] = btn_obj
+                objects[1][_program][1] = btn_obj
                 self.add(_box)
                 btn_obj.connect("clicked", objects[2].choose_release)
 
                 # create the version selector window
-                api_link = popout_programs[_program][0]
+                api_link = objects[1][_program][0]
                 selector, tree_store = objects[3](
                     api_link, _program
                     )
-                popout_programs[_program][2] = selector
-                popout_programs[_program][3] = tree_store
+                objects[1][_program][2] = selector
+                objects[1][_program][3] = tree_store
+
 
 class MessageDialog(Gtk.Dialog):
     """
@@ -108,7 +107,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
     Window to install different version of the program.
     Currently used only for proton-ge.
     """
-    def __init__(self, program_name, json_objects, handler):
+    def __init__(self, program_name, json_objects):
         Gtk.Window.__init__(self)
         self.set_title = ("Manage " + program_name + " versions") # fixme: not working
         self.set_deletable(False)

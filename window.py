@@ -12,6 +12,7 @@ import threading
 import shutil
 import glob
 import distro
+import time
 
 
 class Handler:
@@ -59,11 +60,9 @@ class Handler:
 
 
     def reset(self, *args):
-        to_reset = self.window.get_active_toggle_btn()
         toggle_programs = self.window.toggle_programs
-        for program_name in to_reset:
-            btn_obj = toggle_programs.get(program_name)
-            btn_obj.set_active(False)
+        for button_obj in toggle_programs.values():
+            button_obj.set_active(False)
 
     def install_programs(self):
         distro_class = self.window.distro_class(
@@ -72,7 +71,7 @@ class Handler:
 
         def toggle_programs():
             nonlocal distro_class
-            print("Installing programs")
+            print("Checking for toggled programs")
 
             to_install = self.window.get_active_toggle_btn()
             if to_install:
@@ -82,32 +81,40 @@ class Handler:
                     programs.append(program)
                 distro_class.install_script(programs)
 
-            if distro_class.__class__.__name__ == 'Arch':
-                process = subprocess.Popen(
-                        (
-                            'sh',
-                            self.window.current_path + 'main_install.sh'
-                            ),
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
-                    )
-                process.stdin.write(b'Y\n')
-                process.wait()
+                if distro_class.__class__.__name__ == 'Arch':#
+                    print("Installing toggled programs")
+                    process = subprocess.Popen(
+                            (
+                                'sh',
+                                self.window.current_path + 'install.sh'
+                                ),
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                        )
+                    time.sleep(1)
+                    process.stdin.write(b'Y\n')
+                    process.wait()
+                    print("deleting install.sh")
+                    os.remove(self.window.current_path + 'install.sh')
 
-            else:
-                process = subprocess.Popen(
-                        (
-                            'pkexec',
-                            'sh',
-                            self.window.current_path + 'main_install.sh'
-                            ),
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
-                    )
-                process.stdin.write(b'Y\n')
-                process.wait()
+                else:
+                    print("Installing toggled programs")
+                    process = subprocess.Popen(
+                            (
+                                'pkexec',
+                                'sh',
+                                self.window.current_path + 'install.sh'
+                                ),
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                        )
+                    time.sleep(1)
+                    process.stdin.write(b'Y\n')
+                    process.wait()
+                    print("deleting install.sh")
+                    os.remove(self.window.current_path + 'install.sh')
 
             distro_class.last_all()
 
@@ -118,8 +125,8 @@ class Handler:
         def install_certain_rel():
             nonlocal distro_class
             popout_programs = self.window.popout_programs
+            print("Checking for certain program releases")
             if popout_programs:
-
                 tag_names = list()
                 proge_links = list()  # proton-ge download links
                 for program in popout_programs:
@@ -136,12 +143,7 @@ class Handler:
                         proge_links.append(download_url)
                 distro_class.proton_ge_all(proge_links)
 
-        print("Checking for certain program releases")
         install_certain_rel()
-
-        print("deleting install.sh")
-        os.remove(self.window.current_path + 'main_install.sh')
-
 
     def install(self, *args):
         thread = threading.Thread(target=self.install_programs)
@@ -184,8 +186,8 @@ class Window(Gtk.ApplicationWindow):
     def __init__(self):
         Gtk.ApplicationWindow.__init__(self)
         self.set_urgency_hint(True)
-        self._app_init()
         self.set_default_size(400, 100)
+        self._app_init()
 
     def _app_init(self):
         self.variables()
@@ -273,7 +275,7 @@ class Window(Gtk.ApplicationWindow):
         programs = list()
         for button_obj in self.toggle_programs.values():
             if button_obj.get_active():
-                program_name = button_obj.get_name().replace('-', '_').lower()
+                program_name = button_obj.get_name().replace('-', '_')
                 programs.append(program_name)
         return programs
 
@@ -306,7 +308,7 @@ class Window(Gtk.ApplicationWindow):
         """
         self.releases_data = multi.get_release_data(api_link)
         selector = widgets.ReleaseSelector(
-            program_name, self.releases_data, self.handler
+            program_name, self.releases_data
             )
         return selector, selector.tree_view.store
 
