@@ -81,8 +81,9 @@ class Handler:
                     programs.append(program)
                 distro_class.install_script(programs)
 
-                if distro_class.__class__.__name__ == 'Arch':#
+                if distro_class.__class__.__name__ == 'Arch':
                     print("Installing toggled programs")
+                    print(self.window.current_path)
                     process = subprocess.Popen(
                             (
                                 'sh',
@@ -95,7 +96,7 @@ class Handler:
                     time.sleep(1)
                     process.stdin.write(b'Y\n')
                     process.wait()
-                    print("deleting install.sh")
+
                     os.remove(self.window.current_path + 'install.sh')
 
                 else:
@@ -113,10 +114,10 @@ class Handler:
                     time.sleep(1)
                     process.stdin.write(b'Y\n')
                     process.wait()
-                    print("deleting install.sh")
-                    os.remove(self.window.current_path + 'install.sh')
 
             distro_class.last_all()
+            print("deleting install.sh")
+            #os.remove(self.window.current_path + 'install.sh')
 
         toggle_programs()
 
@@ -145,6 +146,7 @@ class Handler:
 
         install_certain_rel()
         self.reset()
+        print("DONE")
 
     def install(self, *args):
         thread = threading.Thread(target=self.install_programs)
