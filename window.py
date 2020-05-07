@@ -144,11 +144,11 @@ class Handler:
                 distro_class.proton_ge_all(proge_links)
 
         install_certain_rel()
+        self.reset()
 
     def install(self, *args):
         thread = threading.Thread(target=self.install_programs)
         thread.start()
-        self.reset()
 
 class Window(Gtk.ApplicationWindow):
     @property
