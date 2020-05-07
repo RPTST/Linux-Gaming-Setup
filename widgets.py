@@ -50,7 +50,7 @@ class FlowBox(Gtk.FlowBox):
         self.set_homogeneous(False)
         self.set_selection_mode(Gtk.SelectionMode.NONE)
         self.set_min_children_per_line(0)
-        self.set_max_children_per_line(5)
+        self.set_max_children_per_line(3)
 
         self.add_programs(objects)
 

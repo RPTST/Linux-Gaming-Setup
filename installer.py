@@ -131,7 +131,7 @@ class All:
                 _packages
                 )
 
-        if self.__class__.__base__.__name__ == 'Arch':
+        if self.__class__.__name__ == 'Arch':
             print("Arch installer script")
             with open('./install.sh', 'a') as script_file:
                 script_file.write("echo 'Install script executed'\n")
@@ -265,10 +265,11 @@ class Fedora(All, fedora.Fedora):
         for program_name in install_programs:
             try:
                 program_packages = list(getattr(self, 'pckg_' + program_name)())
-                getattr(self, program_name)()
+                packages += program_packages
+
             except AttributeError:
+                getattr(self, program_name)()
                 pass
-            packages += program_packages
         self.create_install_script_all(
             [command, 2], packages, self._top_commands
             )
@@ -395,9 +396,9 @@ class Ubuntu(All, ubuntu.Ubuntu):
             try:
                 program_packages = list(getattr(self, 'pckg_' + program_name)())
                 getattr(self, program_name)()
+                packages += program_packages
             except AttributeError:
                 pass
-            packages += program_packages
         self.create_install_script_all(
             [command, 2], packages, self._top_commands
             )
