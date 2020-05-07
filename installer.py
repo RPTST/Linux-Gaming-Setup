@@ -99,11 +99,13 @@ class All:
 
     @staticmethod
     def proton_ge_all(links):
-        proton_path = os.path.expanduser(
-            '~/.local/share/Steam/compatibilitytools.d'
-            )
-        for link in links:
-            multi.download_extract(link, proton_path)
+        if os.path.isdir(os.path.expanduser('~/.steam')):
+            os.makedirs(os.path.expanduser('~/.steam/root/compatibilitytools.d'))
+            proton_path = os.path.expanduser(
+                '~/.local/share/Steam/compatibilitytools.d'
+                )
+            for link in links:
+                multi.download_extract(link, proton_path)
 
     def last_all(self):
         for key, value in self._after.items():
