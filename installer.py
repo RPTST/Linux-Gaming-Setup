@@ -118,13 +118,14 @@ class All:
         """
         for package in packages:
             command.insert(insert_int, package)
-        return ' '.join(command)
+        cmd = ' '.join(command)
+        return cmd
 
-    def create_install_script_all(self, create_icmd, _packages, _top_commands):
+    def create_install_script_all(self, create_icmd, _packages):
         """
         Creates the install.sh file
         """
-        if create_icmd[1]:
+        if _packages:
             install_cmd = All.create_install_cmd_all(
                 create_icmd[0],
                 create_icmd[1],
@@ -133,22 +134,23 @@ class All:
 
         if self.__class__.__name__ == 'Arch':
             print("Arch installer script")
-            with open('./install.sh', 'a') as script_file:
+            with open(self.current_folder + 'install.sh', 'a') as script_file:
                 script_file.write("echo 'Install script executed'\n")
-                if create_icmd[1]:
+                if _packages:
                     script_file.write(install_cmd + "\n")
                     script_file.write('pkexec sh _top_commands')
-                    os.path.isfile('./install.sh')
 
         else:
             print("Installer script for all other distros")
-            with open('./install.sh', 'a') as script_file:
+            with open(self.current_folder + 'install.sh', 'a') as script_file:
                 script_file.write("echo 'Install script executed'\n")
+                _top_commands = self._top_commands
                 if _top_commands:
                     script_file.write("echo 'Top command/s executed'\n")
                     for _top_cmd in _top_commands:
+                        print(_top_cmd)
                         script_file.write(_top_cmd + '\n')
-                if create_icmd[1]:
+                if _packages:
                     script_file.write("echo 'Packages are being downloaded'\n")
                     script_file.write(install_cmd + '\n')
 
@@ -264,14 +266,14 @@ class Fedora(All, fedora.Fedora):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = list(getattr(self, 'pckg_' + program_name)())
-                packages += program_packages
+                program_packages = getattr(self, 'pckg_' + program_name)()
+                packages += list(program_packages)
 
-            except AttributeError:
+            except AttributeError as e:
                 getattr(self, program_name)()
                 pass
         self.create_install_script_all(
-            [command, 2], packages, self._top_commands
+            [command, 2], packages
             )
 
 
