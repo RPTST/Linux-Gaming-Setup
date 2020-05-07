@@ -262,8 +262,13 @@ class Fedora(All, fedora.Fedora):
     def install_script(self, install_programs):
         command = ['dnf', 'install', '-y']
         packages = list()
-        for program in install_programs:
-            packages += list(getattr(self, program)())
+        for program_name in install_programs:
+            try:
+                program_packages = list(getattr(self, 'pckg_' + program_name)())
+                getattr(self, program_name)()
+            except AttributeError:
+                pass
+            packages += program_packages
         self.create_install_script_all(
             [command, 2], packages, self._top_commands
             )
