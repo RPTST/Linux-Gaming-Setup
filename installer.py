@@ -304,7 +304,7 @@ class Solus(All, solus.Solus):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = getattr(self, 'pckg_' + program_name)
+                program_packages = getattr(self, 'pckg_' + program_name)()
                 packages += list(program_packages)
                 
             except AttributeError:
