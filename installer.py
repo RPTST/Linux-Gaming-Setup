@@ -210,7 +210,7 @@ class Arch(All, arch.Arch):
                 pass
             packages += program_packages
         self.create_install_script_all(
-            [command, 2], packages, self._top_commands
+            [command, 2], packages
             )
 
 
