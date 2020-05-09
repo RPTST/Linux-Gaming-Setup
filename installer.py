@@ -100,7 +100,10 @@ class All:
     @staticmethod
     def proton_ge_all(links):
         if os.path.isdir(os.path.expanduser('~/.steam')):
-            os.makedirs(os.path.expanduser('~/.steam/root/compatibilitytools.d'))
+            try:
+                os.makedirs(os.path.expanduser('~/.steam/root/compatibilitytools.d'))
+            except FileExistsError:
+                pass
             proton_path = os.path.expanduser(
                 '~/.local/share/Steam/compatibilitytools.d'
                 )
@@ -150,7 +153,6 @@ class All:
                 if _top_commands:
                     script_file.write("echo 'Top command/s executed'\n")
                     for _top_cmd in _top_commands:
-                        print(_top_cmd)
                         script_file.write(_top_cmd + '\n')
                 if _packages:
                     script_file.write("echo 'Packages are being downloaded'\n")
@@ -400,7 +402,7 @@ class Ubuntu(All, ubuntu.Ubuntu):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = getattr(self, 'pckg_' + program_name)
+                program_packages = getattr(self, 'pckg_' + program_name)()
                 packages += list(program_packages)
 
             except AttributeError:

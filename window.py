@@ -83,7 +83,6 @@ class Handler:
 
                 if distro_class.__class__.__name__ == 'Arch':
                     print("Installing toggled programs")
-                    print(self.window.current_path)
                     process = subprocess.Popen(
                             (
                                 'sh',

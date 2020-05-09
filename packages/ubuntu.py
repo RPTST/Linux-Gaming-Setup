@@ -15,10 +15,10 @@ class Ubuntu:
     def __init__(self):
         pass
 
-    def lutris(self):
+    def pckg_lutris(self):
         yield "lutris"
 
-    def wine(self):
+    def pckg_wine(self):
         def amd_intel():
             for package in [
                     "mesa-vulkan-drivers",
@@ -37,7 +37,7 @@ class Ubuntu:
         else:
             nvidia()
 
-    def steam(self):
+    def pckg_steam(self):
         yield "steam"
 
     def pckg_vkbasalt(self):
@@ -48,7 +48,7 @@ class Ubuntu:
                 ]:
             yield package
 
-    def gamemode(self):
+    def pckg_gamemode(self):
         for package in [
                 'meson', 'libsystemd-dev',
                 'pkg-config', 'ninja-build',
