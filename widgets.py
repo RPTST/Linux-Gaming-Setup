@@ -3,40 +3,61 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject
 import os
 import time
+import glob
+
+
 class ProgramBox(Gtk.VBox):
     def __init__(self, program_name, option):
         Gtk.Box.__init__(self)
         self.program_name = program_name
         self.get_func_by_opt(option)
+        self.icons_path = (
+            
+            )
 
-    @property
     def new_toggle_button(self):
         btn = Gtk.ToggleButton("Install")
         btn.set_name(self.program_name)
         return btn
 
-    @property
     def new_button(self):
         btn = Gtk.Button("Choose")
         btn.set_name(self.program_name)
         return btn
 
+    def image(self):
+        icon_path = glob.glob(
+            os.path.dirname(os.path.abspath(__file__)) +
+            '/icons/' +
+            self.program_name +
+            '.*'
+        )[0]
+        img = Gtk.Image()
+        if os.path.isfile(icon_path):
+            img.set_from_file(icon_path)
+            return img
+        else:
+            img.set_opacity(0)
+            return img
+
     def get_func_by_opt(self, option):
         options = {
             'click_install': self.toggle_install,
             'show_releases': self.choose_install
-            }
+        }
         options.get(option)()
 
     def toggle_install(self):
         label = Gtk.Label(self.program_name)
-        self.button = self.new_toggle_button
+        self.button = self.new_toggle_button()
+        #self.pack_start(self.image(), False, False, 0)
         self.pack_start(label, False, False, 0)
         self.pack_end(self.button, False, False, 0)
 
     def choose_install(self):
         label = Gtk.Label(self.program_name)
-        self.button = self.new_button
+        self.button = self.new_button()
+        #self.pack_start(self.image(), False, False, 0)
         self.pack_start(label, False, False, 0)
         self.pack_end(self.button, False, False, 0)
 
@@ -60,7 +81,9 @@ class FlowBox(Gtk.FlowBox):
                 _box = ProgramBox(_program, 'click_install')
                 self.add(_box)
                 objects[0][_program] = _box.button
-                _box.button.connect("clicked", objects[2].toggl_nec_programs)
+                _box.button.connect(
+                    "clicked", objects[2].toggl_nec_programs
+                )
 
         if objects[1]:
             for _program in objects[1]:
@@ -68,13 +91,16 @@ class FlowBox(Gtk.FlowBox):
                 btn_obj = _box.button
                 objects[1][_program][1] = btn_obj
                 self.add(_box)
-                btn_obj.connect("clicked", objects[2].choose_release)
+                btn_obj.connect(
+                    "clicked", objects[2].choose_release
+                )
 
                 # create the version selector window
                 api_link = objects[1][_program][0]
                 selector, tree_store = objects[3](
-                    api_link, _program
-                    )
+                    api_link,
+                    _program
+                )
                 objects[1][_program][2] = selector
                 objects[1][_program][3] = tree_store
 
@@ -182,10 +208,11 @@ class TreeView(Gtk.TreeView):
             tag_name = data_object.get('tag_name')
             check_button.set_name(tag_name)
             release = data_object.get('prerelease')
-            _list_store.append([
+            _list_store.append(
+                [
                     False, str(tag_name), str(release)
-                    ]
-                )
+                ]
+            )
         return _list_store
 
     def on_cell_toggled(self, widget, path):
