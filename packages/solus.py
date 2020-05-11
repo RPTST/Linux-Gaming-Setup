@@ -24,7 +24,6 @@ class Solus:
 
     @CachingProperty
     def pckg_lutris(self):
-        print("Adding lutris packages")
         yield 'lutris'
 
     @CachingProperty

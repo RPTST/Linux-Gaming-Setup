@@ -38,8 +38,6 @@ class Arch:
     @CachingProperty
     def pckg_lutris(self):
         yield "lutris-git"
-        print(f"Returning packages for vulkan support on {self.gpu_vendor} gpu")
-
         def amd():
             """
             Returns Vulkan packages for Amd gpus
@@ -86,7 +84,6 @@ class Arch:
 
     @CachingProperty
     def pckg_steam(self):
-        print("returning steam packages")
         for package in [
                 'steam-native-runtime',
                 'steam'
@@ -95,10 +92,6 @@ class Arch:
 
     @CachingProperty
     def pckg_vkbasalt(self):
-        print(
-            "Returning necressary dependencies",
-            "for vkBasalt to work."
-            )
         for package in [
                 'glslang', 'vulkan-tools',
                 'lib32-libx11', 'libx11'
@@ -107,7 +100,6 @@ class Arch:
 
     @CachingProperty
     def pckg_gamemode(self):
-        print("Returning gamemode packages")
         for package in [
                 'meson', 'systemd-devel',
                 'pkg-config git', 'dbus-devel'
