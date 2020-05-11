@@ -205,12 +205,13 @@ class Arch(All, arch.Arch):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = list(getattr(self, 'pckg_' + program_name)())
-                getattr(self, program_name)()
+                program_packages = getattr(self, 'pckg_' + program_name)
+                packages += list(program_packages)
+                
 
             except AttributeError:
-                pass
-            packages += program_packages
+                getattr(self, program_name)()
+            
         self.create_install_script_all(
             [command, 2], packages
             )
@@ -306,7 +307,7 @@ class Solus(All, solus.Solus):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = getattr(self, 'pckg_' + program_name)()
+                program_packages = getattr(self, 'pckg_' + program_name)
                 packages += list(program_packages)
                 
             except AttributeError:
@@ -402,7 +403,7 @@ class Ubuntu(All, ubuntu.Ubuntu):
         packages = list()
         for program_name in install_programs:
             try:
-                program_packages = getattr(self, 'pckg_' + program_name)()
+                program_packages = getattr(self, 'pckg_' + program_name)
                 packages += list(program_packages)
 
             except AttributeError:

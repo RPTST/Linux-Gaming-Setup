@@ -14,6 +14,7 @@ class Solus:
     def __init__(self):
         pass
 
+    @CachingProperty
     def pckg_wine(self):
         for package in [
                 'wine', 'wine-devel', 'wine-32bit-devel', 'winetricks',
@@ -21,16 +22,19 @@ class Solus:
                 ]:
             yield package
 
+    @CachingProperty
     def pckg_lutris(self):
         print("Adding lutris packages")
         yield 'lutris'
 
+    @CachingProperty
     def pckg_steam(self):
         for package in [
                 'steam', 'linux-steam-integration'
                 ]:
             yield package
 
+    @CachingProperty
     def pckg_vkbasalt(self):
         for package in [
                 'vulkan-tools', 'glslang', 'libX11-devel',

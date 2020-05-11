@@ -15,9 +15,11 @@ class Ubuntu:
     def __init__(self):
         pass
 
+    @CachingProperty
     def pckg_lutris(self):
         yield "lutris"
 
+    @CachingProperty
     def pckg_wine(self):
         def amd_intel():
             for package in [
@@ -37,9 +39,11 @@ class Ubuntu:
         else:
             nvidia()
 
+    @CachingProperty
     def pckg_steam(self):
         yield "steam"
 
+    @CachingProperty
     def pckg_vkbasalt(self):
         for package in [
                 "build-essential", "gcc-multilib",
@@ -48,6 +52,7 @@ class Ubuntu:
                 ]:
             yield package
 
+    @CachingProperty
     def pckg_gamemode(self):
         for package in [
                 'meson', 'libsystemd-dev',
