@@ -1,9 +1,10 @@
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GObject, GdkPixbuf
 import os
 import time
 import glob
+import checker
 
 
 class ProgramBox(Gtk.VBox):
@@ -11,9 +12,6 @@ class ProgramBox(Gtk.VBox):
         Gtk.Box.__init__(self)
         self.program_name = program_name
         self.get_func_by_opt(option)
-        self.icons_path = (
-            
-            )
 
     def new_toggle_button(self):
         btn = Gtk.ToggleButton("Install")
@@ -32,13 +30,20 @@ class ProgramBox(Gtk.VBox):
             self.program_name +
             '.*'
         )[0]
-        img = Gtk.Image()
-        if os.path.isfile(icon_path):
-            img.set_from_file(icon_path)
-            return img
-        else:
+        if not icon_path:
+            img = Gtk.Image()
             img.set_opacity(0)
             return img
+
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+            filename=icon_path,
+            width=56,
+            height=56,
+            preserve_aspect_ratio=True
+        )
+        img = Gtk.Image.new_from_pixbuf(pixbuf)
+        return img
+            
 
     def get_func_by_opt(self, option):
         options = {
@@ -50,14 +55,14 @@ class ProgramBox(Gtk.VBox):
     def toggle_install(self):
         label = Gtk.Label(self.program_name)
         self.button = self.new_toggle_button()
-        #self.pack_start(self.image(), False, False, 0)
+        self.pack_start(self.image(), False, False, 0)
         self.pack_start(label, False, False, 0)
         self.pack_end(self.button, False, False, 0)
 
     def choose_install(self):
         label = Gtk.Label(self.program_name)
         self.button = self.new_button()
-        #self.pack_start(self.image(), False, False, 0)
+        self.pack_start(self.image(), False, False, 0)
         self.pack_start(label, False, False, 0)
         self.pack_end(self.button, False, False, 0)
 
