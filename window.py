@@ -6,10 +6,7 @@ import os
 import webbrowser
 import subprocess
 import threading
-import shutil
-import glob
 import distro
-import time
 
 
 class Handler:
@@ -55,7 +52,6 @@ class Handler:
             button_obj = self.window.toggle_programs.get(brother_program)
             button_obj.set_active(True)
 
-
     def reset(self, *args):
         toggle_programs = self.window.toggle_programs
         for button_obj in toggle_programs.values():
@@ -81,31 +77,29 @@ class Handler:
                 if distro_class.__class__.__name__ == 'Arch':
                     print("Installing toggled programs")
                     process = subprocess.Popen(
-                            (
-                                'sh',
-                                self.window.current_path + 'install.sh'
-                                ),
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE
-                        )
-                    time.sleep(1)
+                        (
+                            'sh',
+                            self.window.current_path + 'install.sh'
+                            ),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
+                    )
                     process.stdin.write(b'Y\n')
                     process.wait()
 
                 else:
                     print("Installing toggled programs")
                     process = subprocess.Popen(
-                            (
-                                'pkexec',
-                                'sh',
-                                self.window.current_path + 'install.sh'
-                                ),
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE
+                        (
+                            'pkexec',
+                            'sh',
+                            self.window.current_path + 'install.sh'
+                            ),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE
                         )
-                    time.sleep(1)
                     process.stdin.write(b'Y\n')
                     process.wait()
 
@@ -146,6 +140,7 @@ class Handler:
         thread = threading.Thread(target=self.install_programs)
         thread.start()
 
+
 class Window(Gtk.ApplicationWindow):
     @property
     def distro_class(self):
@@ -157,23 +152,22 @@ class Window(Gtk.ApplicationWindow):
 
         if distro.like() == 'debian':
             if distro.id() == 'ubuntu':
-                distribution = installer.Ubuntu
-                print_name(distribution.__name__)
-                return distribution
-        else:
-            def distribution():
-                _like = distro.like()
-                _id = distro.id()
-                if _like:
-                    return _like
-                elif _id:
-                    return _id
-                else:
-                    raise SystemError("Distribution not recognized")
+                _distribution = installer.Ubuntu
+                print_name(_distribution.__name__)
+                return _distribution
 
-            distribution = getattr(installer, distribution().capitalize())
-            print_name(distribution.__name__)
-            return distribution
+        def distribution():
+            _like = distro.like()
+            _id = distro.id()
+            if _like:
+                return _like
+            elif _id:
+                return _id
+            raise SystemError("Distribution not recognized")
+
+        _distribution_class = getattr(installer, distribution().capitalize())
+        print_name(_distribution_class.__name__)
+        return _distribution_class
 
     @property
     def gpu_vendor(self):
@@ -268,7 +262,6 @@ class Window(Gtk.ApplicationWindow):
 
         self.add(vbox)
 
-
     def get_active_toggle_btn(self):
         """
         Gets programs to install by checking if the
@@ -291,9 +284,11 @@ class Window(Gtk.ApplicationWindow):
                 self,
                 title="Warning",
                 message=(
-                    "You will have to select ur gpu vendor manually" +
-                    "by clicking on the menu button and select it form the combo button")
+                    "You will have to select ur gpu vendor manually",
+                    "by clicking on the menu button and select it",
+                    "form the combo button"
                 )
+            )
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
                 dialog.destroy()
@@ -327,4 +322,3 @@ class Window(Gtk.ApplicationWindow):
 
     def stop(self, *args):
         Gtk.main_quit()
-        

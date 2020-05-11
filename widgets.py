@@ -1,11 +1,8 @@
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf
 import os
-import time
 import glob
-import checker
-import checker
 
 
 class ProgramBox(Gtk.VBox):
@@ -54,7 +51,7 @@ class ProgramBox(Gtk.VBox):
             self.button.set_sensitive(False)
             self.pack_end(self.button, False, False, 0)
         else:
-             self.pack_end(self.button, False, False, 0)
+            self.pack_end(self.button, False, False, 0)
         self.pack_start(self.image(), False, False, 0)
         self.pack_start(label, False, False, 0)
 
@@ -71,6 +68,7 @@ class ProgramBox(Gtk.VBox):
             'show_releases': self.choose_install
         }
         options.get(option)()
+
 
 class FlowBox(Gtk.FlowBox):
     """
@@ -92,12 +90,17 @@ class FlowBox(Gtk.FlowBox):
                 self.add(_box)
                 objects[0][_program] = _box.button
                 _box.button.connect(
-                    "clicked", objects[2].toggl_nec_programs
+                    "clicked",
+                    objects[2].toggl_nec_programs
                 )
 
         if objects[1]:
             for _program in objects[1]:
-                _box = ProgramBox(_program, 'show_releases',  objects[4])
+                _box = ProgramBox(
+                    _program,
+                    'show_releases',
+                    objects[4]
+                )
                 btn_obj = _box.button
                 objects[1][_program][1] = btn_obj
                 self.add(_box)
@@ -144,7 +147,6 @@ class ReleaseSelector(Gtk.ApplicationWindow):
     """
     def __init__(self, program_name, json_objects, check_programs):
         Gtk.Window.__init__(self)
-        self.set_title = ("Manage " + program_name + " versions") # fixme: not working
         self.set_deletable(False)
         self.program_name = program_name
         self.json_objects = json_objects
@@ -193,7 +195,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
         box.pack_end(bottom_button(), False, False, 0)
         return box
 
-    def on_destroy(self, window):
+    def on_destroy(self, args):
         self.hide()
 
 
@@ -207,7 +209,6 @@ class TreeView(Gtk.TreeView):
         self.store = self.list_store()
         self.set_model(self.store)
         self.set_columns_renderers()
-        
 
     def set_columns_renderers(self):
         renderer_toggle = Gtk.CellRendererToggle()
@@ -220,7 +221,9 @@ class TreeView(Gtk.TreeView):
         self.append_column(column_text)
 
         renderer_release_type = Gtk.CellRendererText()
-        column_release_type = Gtk.TreeViewColumn("Prelease ?", renderer_release_type, text=2)
+        column_release_type = Gtk.TreeViewColumn(
+            "Prelease ?", renderer_release_type, text=2
+        )
         self.append_column(column_release_type)
 
     def list_store(self):
@@ -242,7 +245,6 @@ class TreeView(Gtk.TreeView):
                     )
             return _list_store
 
-
         for data_object in self.data_objects:
             check_button = Gtk.CheckButton()
             tag_name = data_object.get('tag_name')
@@ -257,7 +259,3 @@ class TreeView(Gtk.TreeView):
 
     def on_cell_toggled(self, widget, path):
         self.store[path][0] = not self.store[path][0]
-
-
-class DownloadingStatus(Gtk.ApplicationWindow):
-    pass

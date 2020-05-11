@@ -1,7 +1,6 @@
 import subprocess
 import os
 import shutil
-import inspect
 import distro
 import multi
 from packages import arch, fedora, solus, ubuntu
@@ -207,14 +206,13 @@ class Arch(All, arch.Arch):
             try:
                 program_packages = getattr(self, 'pckg_' + program_name)
                 packages += list(program_packages)
-                
 
             except AttributeError:
                 getattr(self, program_name)()
-            
+
         self.create_install_script_all(
             [command, 2], packages
-            )
+        )
 
 
 class Fedora(All, fedora.Fedora):
@@ -309,10 +307,10 @@ class Solus(All, solus.Solus):
             try:
                 program_packages = getattr(self, 'pckg_' + program_name)
                 packages += list(program_packages)
-                
+
             except AttributeError:
                 getattr(self, program_name)()
-            
+
         self.create_install_script_all(
             [command, 2], packages
             )
