@@ -1,9 +1,24 @@
+Short description:
+this app is mainly made for distro hoppers or new people that don't know all of GaMiNg stuff on Linux distributions. This app aims to help those ppl and also help distro hoppers.
+                                                                                                                                    
+                                                                                                                                                                                                                                                                        
+![Image of the app](https://i.imgur.com/cLfzA6b.png)
 
-The current state of the app is poor becuse the backend is shitty and i need to imporve a ton of stuff.                         
-If you have experiance in making a downloader in python or any other programming language that can be compiled so it can be                 used in python feel free to make a pull request.                                                                                          
-                                                                                                                                                  
->What am i going to add to the app ?
-1. Detect if the program is already installed
-2. Uninstall option
-3. Installation progress
-4. Image for each program
+### How to run the app ?
+**You can run the app by executing the app.py file with python3**                                                                          
+
+### Dependencies
+**Python:**                                                                                                                                    
+*Python packages needed to be installed for the app to work properly*
+1.  vdf
+2.  webbrowser
+3.  subprocess
+4.  threading
+5.  shutil
+6.  glob
+7.  tempfile
+8.  distro
+                                                                                                                                                   
+**Packages:**                                                                                                                                              
+*These is the list of commands used not package names because on different distros there is a different package name*
+1.  glxinfo
