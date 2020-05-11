@@ -1,12 +1,9 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio
+import installer, checker, widgets, info, multi
 import os
 import webbrowser
-import installer
-import info
-import widgets
-import multi
 import subprocess
 import threading
 import shutil
@@ -199,19 +196,19 @@ class Window(Gtk.ApplicationWindow):
         self.handler = Handler(self)
         self.current_path = (
             os.path.dirname(os.path.abspath(__file__)) + '/'
-            )
+        )
         self.builder = Gtk.Builder()
         self.builder.add_from_file(self.current_path + 'ui.glade')
         self.builder.connect_signals(
             self.handler
-            )
+        )
         self.toggle_programs = {
             'Wine': None,
             'Lutris': None,
             'Steam': None,
             'vkBasalt': None,
             'Gamemode': None
-            }
+        }
         self.popout_programs = {
             'Proton-Ge': [
                 'https://api.github.com/repos/GloriousEggroll/' +
@@ -219,12 +216,17 @@ class Window(Gtk.ApplicationWindow):
                 None,  # button object
                 None,  # version selector window
                 None   # GtkTreeView
-                ]
-            }
+            ]
+        }
         self.brother_programs = {
             'Lutris': 'Wine',
-            }
-
+        }
+        _checker = checker.All
+        self.check_programs = {
+            'Gamemode': _checker.gamemode_all(),
+            'vkBasalt': _checker.vkbasalt_all(),
+            'Proton-Ge': _checker.proton_ge()
+        }
 
     def headerbar(self):
         header_bar = Gtk.HeaderBar()
@@ -244,8 +246,9 @@ class Window(Gtk.ApplicationWindow):
             self.toggle_programs,
             self.popout_programs,
             self.handler,
-            self.crate_rele_sel
-            ]
+            self.crate_rele_sel,
+            self.check_programs
+        ]
 
         flowbox = widgets.FlowBox(objects)
         vbox.pack_start(flowbox, False, True, 0)
@@ -297,9 +300,10 @@ class Window(Gtk.ApplicationWindow):
         else:
             select_vendor_button = self.builder.get_object(
                 'select_gpu_vendor'
-                )
+            )
             select_vendor_button.set_active_id(
-                self.gpu_vendor)
+                self.gpu_vendor
+            )
 
     def crate_rele_sel(self, api_link, program_name):
         """
@@ -307,8 +311,10 @@ class Window(Gtk.ApplicationWindow):
         """
         self.releases_data = multi.get_release_data(api_link)
         selector = widgets.ReleaseSelector(
-            program_name, self.releases_data
-            )
+            program_name,
+            self.releases_data,
+            self.check_programs
+        )
         return selector, selector.tree_view.store
 
     def show_all_(self):

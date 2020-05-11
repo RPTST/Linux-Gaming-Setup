@@ -5,12 +5,14 @@ import os
 import time
 import glob
 import checker
+import checker
 
 
 class ProgramBox(Gtk.VBox):
-    def __init__(self, program_name, option):
+    def __init__(self, program_name, option, check_programs):
         Gtk.Box.__init__(self)
         self.program_name = program_name
+        self.check_programs = check_programs
         self.get_func_by_opt(option)
 
     def new_toggle_button(self):
@@ -18,7 +20,7 @@ class ProgramBox(Gtk.VBox):
         btn.set_name(self.program_name)
         return btn
 
-    def new_button(self):
+    def new_choose_button(self):
         btn = Gtk.Button("Choose")
         btn.set_name(self.program_name)
         return btn
@@ -43,7 +45,25 @@ class ProgramBox(Gtk.VBox):
         )
         img = Gtk.Image.new_from_pixbuf(pixbuf)
         return img
-            
+
+    def toggle_install(self):
+        label = Gtk.Label(self.program_name)
+        self.button = self.new_toggle_button()
+        if self.program_name in self.check_programs:
+            self.button.set_active(True)
+            self.button.set_sensitive(False)
+            self.pack_end(self.button, False, False, 0)
+        else:
+             self.pack_end(self.button, False, False, 0)
+        self.pack_start(self.image(), False, False, 0)
+        self.pack_start(label, False, False, 0)
+
+    def choose_install(self):
+        label = Gtk.Label(self.program_name)
+        self.button = self.new_choose_button()
+        self.pack_start(self.image(), False, False, 0)
+        self.pack_start(label, False, False, 0)
+        self.pack_end(self.button, False, False, 0)
 
     def get_func_by_opt(self, option):
         options = {
@@ -51,21 +71,6 @@ class ProgramBox(Gtk.VBox):
             'show_releases': self.choose_install
         }
         options.get(option)()
-
-    def toggle_install(self):
-        label = Gtk.Label(self.program_name)
-        self.button = self.new_toggle_button()
-        self.pack_start(self.image(), False, False, 0)
-        self.pack_start(label, False, False, 0)
-        self.pack_end(self.button, False, False, 0)
-
-    def choose_install(self):
-        label = Gtk.Label(self.program_name)
-        self.button = self.new_button()
-        self.pack_start(self.image(), False, False, 0)
-        self.pack_start(label, False, False, 0)
-        self.pack_end(self.button, False, False, 0)
-
 
 class FlowBox(Gtk.FlowBox):
     """
@@ -83,7 +88,7 @@ class FlowBox(Gtk.FlowBox):
     def add_programs(self, objects):
         if objects[0]:
             for _program in objects[0]:
-                _box = ProgramBox(_program, 'click_install')
+                _box = ProgramBox(_program, 'click_install', objects[4])
                 self.add(_box)
                 objects[0][_program] = _box.button
                 _box.button.connect(
@@ -92,14 +97,13 @@ class FlowBox(Gtk.FlowBox):
 
         if objects[1]:
             for _program in objects[1]:
-                _box = ProgramBox(_program, 'show_releases')
+                _box = ProgramBox(_program, 'show_releases',  objects[4])
                 btn_obj = _box.button
                 objects[1][_program][1] = btn_obj
                 self.add(_box)
                 btn_obj.connect(
                     "clicked", objects[2].choose_release
                 )
-
                 # create the version selector window
                 api_link = objects[1][_program][0]
                 selector, tree_store = objects[3](
@@ -138,7 +142,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
     Window to install different version of the program.
     Currently used only for proton-ge.
     """
-    def __init__(self, program_name, json_objects):
+    def __init__(self, program_name, json_objects, check_programs):
         Gtk.Window.__init__(self)
         self.set_title = ("Manage " + program_name + " versions") # fixme: not working
         self.set_deletable(False)
@@ -146,7 +150,16 @@ class ReleaseSelector(Gtk.ApplicationWindow):
         self.json_objects = json_objects
         self.hide_on_delete()
         self.set_default_size(250, 300)
-        self.tree_view = TreeView(self.json_objects)
+        if check_programs[program_name]:
+            self.tree_view = TreeView(
+                self.json_objects,
+                check_programs[program_name]
+            )
+        else:
+            self.tree_view = TreeView(
+                self.json_objects,
+                False
+            )
 
         self.add(self.body())
 
@@ -185,12 +198,16 @@ class ReleaseSelector(Gtk.ApplicationWindow):
 
 
 class TreeView(Gtk.TreeView):
-    def __init__(self, json_objects):
+    def __init__(self, json_objects, installed):
         Gtk.TreeView.__init__(self)
         self.data_objects = json_objects
+
+        # if release of this program is already installed
+        self.installed = installed
         self.store = self.list_store()
         self.set_model(self.store)
         self.set_columns_renderers()
+        
 
     def set_columns_renderers(self):
         renderer_toggle = Gtk.CellRendererToggle()
@@ -208,6 +225,24 @@ class TreeView(Gtk.TreeView):
 
     def list_store(self):
         _list_store = Gtk.ListStore(bool, str, str)
+
+        if self.installed:
+            for data_object in self.data_objects:
+                check_button = Gtk.CheckButton()
+                tag_name = data_object.get('tag_name')
+                check_button.set_name(tag_name)
+                release = data_object.get('prerelease')
+                if tag_name in self.installed:
+                    pass
+                else:
+                    _list_store.append(
+                        [
+                            False, str(tag_name), str(release)
+                        ]
+                    )
+            return _list_store
+
+
         for data_object in self.data_objects:
             check_button = Gtk.CheckButton()
             tag_name = data_object.get('tag_name')
