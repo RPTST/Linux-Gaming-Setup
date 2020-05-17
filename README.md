@@ -20,5 +20,5 @@ this app is mainly made for distro hoppers or new people that don't know all of 
 8.  distro
                                                                                                                                                    
 **Packages:**                                                                                                                                              
-*These is the list of commands used not package names because on different distros there is a different package name*
+*This is the list of used commands not package names because on different distros the package name might be different*
 1.  glxinfo
