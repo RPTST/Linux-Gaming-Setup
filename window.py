@@ -1,4 +1,5 @@
 import gi
+
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gio
 import installer, checker, widgets, info, multi
@@ -15,33 +16,26 @@ class Handler:
     The functions to be executed depending on a signal
     can be found by opening ui.glade with Glade
     """
+
     def __init__(self, Window_obj):
         self.window = Window_obj
 
     def refresh(self, *args):
         if self.window.refresh_btn.get_active():
-            print('refreshed')
+            print("refreshed")
 
     def self_github_page(self, *args):
         print("Button clicked")
-        webbrowser.open_new(
-            'https://github.com/RubixPower/Linux-Gaming-Setup'
-            )
+        webbrowser.open_new("https://github.com/RubixPower/Linux-Gaming-Setup")
 
     def lutris_page(self, *args):
-        webbrowser.open_new(
-            'https://lutris.net/'
-            )
+        webbrowser.open_new("https://lutris.net/")
 
     def lutris_github(self, *args):
-        webbrowser.open_new(
-            'https://github.com/lutris/lutris'
-            )
+        webbrowser.open_new("https://github.com/lutris/lutris")
 
     def choose_release(self, button):
-        selector = self.window.popout_programs.get(
-            button.get_name()
-            )[2]
+        selector = self.window.popout_programs.get(button.get_name())[2]
         selector.show_all()
 
     def toggl_nec_programs(self, button):
@@ -58,9 +52,7 @@ class Handler:
             button_obj.set_active(False)
 
     def install_programs(self):
-        distro_class = self.window.distro_class(
-            self.window.gpu_vendor.lower()
-        )
+        distro_class = self.window.distro_class(self.window.gpu_vendor.lower())
 
         def toggle_programs():
             nonlocal distro_class
@@ -70,42 +62,35 @@ class Handler:
             if to_install:
                 programs = list()
                 for _program in to_install:
-                    program = _program.replace('-', '_').lower()
+                    program = _program.replace("-", "_").lower()
                     programs.append(program)
                 distro_class.install_script(programs)
 
-                if distro_class.__class__.__name__ == 'Arch':
+                if distro_class.__class__.__name__ == "Arch":
                     print("Installing toggled programs")
                     process = subprocess.Popen(
-                        (
-                            'sh',
-                            self.window.current_path + 'install.sh'
-                            ),
+                        ("sh", self.window.current_path + "install.sh"),
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
+                        stderr=subprocess.PIPE,
                     )
-                    process.stdin.write(b'Y\n')
+                    process.stdin.write(b"Y\n")
                     process.wait()
 
                 else:
                     print("Installing toggled programs")
                     process = subprocess.Popen(
-                        (
-                            'pkexec',
-                            'sh',
-                            self.window.current_path + 'install.sh'
-                            ),
+                        ("pkexec", "sh", self.window.current_path + "install.sh"),
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
-                        )
-                    process.stdin.write(b'Y\n')
+                        stderr=subprocess.PIPE,
+                    )
+                    process.stdin.write(b"Y\n")
                     process.wait()
 
             distro_class.last_all()
             print("deleting install.sh")
-            os.remove(self.window.current_path + 'install.sh')
+            os.remove(self.window.current_path + "install.sh")
 
         toggle_programs()
 
@@ -126,8 +111,8 @@ class Handler:
                             tag_names.append(list(store)[i][1])
 
                 for json_object in self.window.releases_data:
-                    tag_name = json_object.get('tag_name')
-                    download_url = json_object.get('download_url')
+                    tag_name = json_object.get("tag_name")
+                    download_url = json_object.get("download_url")
                     if tag_name in tag_names:
                         proge_links.append(download_url)
                 distro_class.proton_ge_all(proge_links)
@@ -147,11 +132,12 @@ class Window(Gtk.ApplicationWindow):
         """
         Gets the appropiate class to install programs
         """
+
         def print_name(name):
             print("Your distro is/based on: " + name)
 
-        if distro.like() == 'debian':
-            if distro.id() == 'ubuntu':
+        if distro.like() == "debian":
+            if distro.id() == "ubuntu":
                 _distribution = installer.Ubuntu
                 print_name(_distribution.__name__)
                 return _distribution
@@ -188,38 +174,34 @@ class Window(Gtk.ApplicationWindow):
 
     def variables(self):
         self.handler = Handler(self)
-        self.current_path = (
-            os.path.dirname(os.path.abspath(__file__)) + '/'
-        )
+        self.current_path = os.path.dirname(os.path.abspath(__file__)) + "/"
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(self.current_path + 'ui.glade')
-        self.builder.connect_signals(
-            self.handler
-        )
+        self.builder.add_from_file(self.current_path + "ui.glade")
+        self.builder.connect_signals(self.handler)
         self.toggle_programs = {
-            'Wine': None,
-            'Lutris': None,
-            'Steam': None,
-            'vkBasalt': None,
-            'Gamemode': None
+            "Wine": None,
+            "Lutris": None,
+            "Steam": None,
+            "vkBasalt": None,
+            "Gamemode": None,
         }
         self.popout_programs = {
-            'Proton-Ge': [
-                'https://api.github.com/repos/GloriousEggroll/' +
-                'proton-ge-custom/releases',
+            "Proton-Ge": [
+                "https://api.github.com/repos/GloriousEggroll/"
+                + "proton-ge-custom/releases",
                 None,  # button object
                 None,  # version selector window
-                None   # GtkTreeView
+                None,  # GtkTreeView
             ]
         }
         self.brother_programs = {
-            'Lutris': 'Wine',
+            "Lutris": "Wine",
         }
         _checker = checker.All
         self.check_programs = {
-            'Gamemode': _checker.gamemode_all(),
-            'vkBasalt': _checker.vkbasalt_all(),
-            'Proton-Ge': _checker.proton_ge()
+            "Gamemode": _checker.gamemode_all(),
+            "vkBasalt": _checker.vkbasalt_all(),
+            "Proton-Ge": _checker.proton_ge(),
         }
 
     def headerbar(self):
@@ -241,7 +223,7 @@ class Window(Gtk.ApplicationWindow):
             self.popout_programs,
             self.handler,
             self.crate_rele_sel,
-            self.check_programs
+            self.check_programs,
         ]
 
         flowbox = widgets.FlowBox(objects)
@@ -258,6 +240,7 @@ class Window(Gtk.ApplicationWindow):
             do_buttons_box.pack_start(button_reset, True, True, 0)
             do_buttons_box.pack_end(button_install, True, True, 0)
             return do_buttons_box
+
         vbox.pack_end(do_buttons_box(), False, False, 0)
 
         self.add(vbox)
@@ -270,35 +253,31 @@ class Window(Gtk.ApplicationWindow):
         programs = list()
         for button_obj in self.toggle_programs.values():
             if button_obj.get_active():
-                program_name = button_obj.get_name().replace('-', '_')
+                program_name = button_obj.get_name().replace("-", "_")
                 programs.append(program_name)
         return programs
 
     def menu_popover(self):
-        popover = self.builder.get_object('menu_popover')
+        popover = self.builder.get_object("menu_popover")
         self.menu_button.set_popover(popover)
 
     def set_gpu_vendor(self):
-        if self.gpu_vendor == 'unknown':
+        if self.gpu_vendor == "unknown":
             dialog = widgets.MessageDialog(
                 self,
                 title="Warning",
                 message=(
                     "You will have to select ur gpu vendor manually",
                     "by clicking on the menu button and select it",
-                    "form the combo button"
-                )
+                    "form the combo button",
+                ),
             )
             response = dialog.run()
             if response == Gtk.ResponseType.OK:
                 dialog.destroy()
         else:
-            select_vendor_button = self.builder.get_object(
-                'select_gpu_vendor'
-            )
-            select_vendor_button.set_active_id(
-                self.gpu_vendor
-            )
+            select_vendor_button = self.builder.get_object("select_gpu_vendor")
+            select_vendor_button.set_active_id(self.gpu_vendor)
 
     def crate_rele_sel(self, api_link, program_name):
         """
@@ -306,9 +285,7 @@ class Window(Gtk.ApplicationWindow):
         """
         self.releases_data = multi.get_release_data(api_link)
         selector = widgets.ReleaseSelector(
-            program_name,
-            self.releases_data,
-            self.check_programs
+            program_name, self.releases_data, self.check_programs
         )
         return selector, selector.tree_view.store
 
