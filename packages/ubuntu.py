@@ -1,4 +1,7 @@
-class GpuNotSupported: pass
+class GpuNotSupported:
+    pass
+
+
 class CachingProperty:
     def __init__(self, func):
         self.func = func
@@ -23,16 +26,17 @@ class Ubuntu:
     def pckg_wine(self):
         def amd_intel():
             for package in [
-                    "mesa-vulkan-drivers",
-                    "mesa-vulkan-drivers:i386",
-                    "libgl1-mesa-dri:i386"]:
+                "mesa-vulkan-drivers",
+                "mesa-vulkan-drivers:i386",
+                "libgl1-mesa-dri:i386",
+            ]:
                 yield package
 
         def nvidia():
             raise GpuNotSupported(
                 "This gpu is not supported yet for this program on the current",
-                "distro. Please report this !"
-                )
+                "distro. Please report this !",
+            )
 
         if self.gpu_vendor == "amd" or "intel":
             amd_intel()
@@ -46,18 +50,25 @@ class Ubuntu:
     @CachingProperty
     def pckg_vkbasalt(self):
         for package in [
-                "build-essential", "gcc-multilib",
-                "libx11-dev", "libx11-dev:i386",
-                "glslang-tools", "spirv-tools"
-                ]:
+            "build-essential",
+            "gcc-multilib",
+            "libx11-dev",
+            "libx11-dev:i386",
+            "glslang-tools",
+            "spirv-tools",
+        ]:
             yield package
 
     @CachingProperty
     def pckg_gamemode(self):
         for package in [
-                'meson', 'libsystemd-dev',
-                'pkg-config', 'ninja-build',
-                'libdbus-1-dev', 'libinih-dev',
-                'git', 'dbus-user-session'
-                ]:
+            "meson",
+            "libsystemd-dev",
+            "pkg-config",
+            "ninja-build",
+            "libdbus-1-dev",
+            "libinih-dev",
+            "git",
+            "dbus-user-session",
+        ]:
             yield package

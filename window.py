@@ -1,13 +1,17 @@
+import multi
+import info
+import widgets
+import checker
+import installer
+import distro
+import threading
+import subprocess
+import webbrowser
+import os
+from gi.repository import Gtk, Gio
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gio
-import installer, checker, widgets, info, multi
-import os
-import webbrowser
-import subprocess
-import threading
-import distro
 
 
 class Handler:

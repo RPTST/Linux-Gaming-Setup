@@ -17,26 +17,31 @@ class Solus:
     @CachingProperty
     def pckg_wine(self):
         for package in [
-                'wine', 'wine-devel', 'wine-32bit-devel', 'winetricks',
-                'vulkan, vulkan-32bit, vulkan-headers'
-                ]:
+            "wine",
+            "wine-devel",
+            "wine-32bit-devel",
+            "winetricks",
+            "vulkan, vulkan-32bit, vulkan-headers",
+        ]:
             yield package
 
     @CachingProperty
     def pckg_lutris(self):
-        yield 'lutris'
+        yield "lutris"
 
     @CachingProperty
     def pckg_steam(self):
-        for package in [
-                'steam', 'linux-steam-integration'
-                ]:
+        for package in ["steam", "linux-steam-integration"]:
             yield package
 
     @CachingProperty
     def pckg_vkbasalt(self):
         for package in [
-                'vulkan-tools', 'glslang', 'libX11-devel',
-                'glibc-devel', 'libstdc++', 'spirv-tools'
-                ]:
+            "vulkan-tools",
+            "glslang",
+            "libX11-devel",
+            "glibc-devel",
+            "libstdc++",
+            "spirv-tools",
+        ]:
             yield package

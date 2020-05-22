@@ -1,9 +1,9 @@
+import glob
+import os
+from gi.repository import Gtk, GdkPixbuf
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GdkPixbuf
-import os
-import glob
 
 
 class ProgramBox(Gtk.VBox):

@@ -16,31 +16,41 @@ class Fedora:
 
     @CachingProperty
     def pckg_wine(self):
-        if self.fedora_ver == '31':
+        if self.fedora_ver == "31":
             for package in (
-                    'winehq-staging', 'vulkan-loader', 'vulkan-loader.i686',
-                    'winetricks', 'lutris'):
+                "winehq-staging",
+                "vulkan-loader",
+                "vulkan-loader.i686",
+                "winetricks",
+                "lutris",
+            ):
                 yield package
-        elif self.fedora_ver == '30':
+        elif self.fedora_ver == "30":
             for package in (
-                    'winehq-staging', 'vulkan-loader',
-                    'vulkan-loader.i686', 'winetricks'):
+                "winehq-staging",
+                "vulkan-loader",
+                "vulkan-loader.i686",
+                "winetricks",
+            ):
                 yield package
 
     @CachingProperty
     def pckg_lutris(self):
-        yield 'lutris'
+        yield "lutris"
 
     def pckg_vkbasalt(self):
         for package in (
-                'vulkan-tools', 'glslang', 'libX11-devel',
-                'glibc-devel.i686', 'libstdc++-devel.i686',
-                'spirv-tools', 'libX11-devel.i686'):
+            "vulkan-tools",
+            "glslang",
+            "libX11-devel",
+            "glibc-devel.i686",
+            "libstdc++-devel.i686",
+            "spirv-tools",
+            "libX11-devel.i686",
+        ):
             yield package
 
     @CachingProperty
     def pckg_gamemode(self):
-        for package in (
-                'meson', 'systemd-devel',
-                'pkg-config', 'git dbus-devel'):
+        for package in ("meson", "systemd-devel", "pkg-config", "git dbus-devel"):
             yield package
