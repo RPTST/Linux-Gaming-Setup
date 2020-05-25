@@ -93,12 +93,11 @@ class Handler:
                     process.wait()
 
             distro_class.last_all()
-            print("deleting install.sh")
-            os.remove(self.window.current_path + "install.sh")
+            if os.path.isfile(self.window.current_path + "install.sh"):
+                print("deleting install.sh")
+                os.remove(self.window.current_path + "install.sh")
 
         toggle_programs()
-
-        print("\n")
 
         def install_certain_rel():
             nonlocal distro_class
@@ -226,8 +225,8 @@ class Window(Gtk.ApplicationWindow):
             self.toggle_programs,
             self.popout_programs,
             self.handler,
-            self.crate_rele_sel,
-            self.check_programs,
+            self.crate_rele_sel,  # release selector
+            self.check_programs,  # installed porgrams
         ]
 
         flowbox = widgets.FlowBox(objects)
@@ -256,7 +255,7 @@ class Window(Gtk.ApplicationWindow):
         """
         programs = list()
         for button_obj in self.toggle_programs.values():
-            if button_obj.get_active():
+            if button_obj.get_active() and button_obj.get_sensitive():
                 program_name = button_obj.get_name().replace("-", "_")
                 programs.append(program_name)
         return programs
