@@ -123,5 +123,5 @@ class Arch:
 
     @CachingProperty
     def pckg_gamemode(self):
-        for package in ["meson", "systemd-devel", "pkg-config git", "dbus-devel"]:
+        for package in ["meson", "systemd", "git", "dbus"]:
             yield package
