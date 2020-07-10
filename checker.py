@@ -29,6 +29,10 @@ class All:
     def proton_ge():
         installed_releases = list()
         path = os.path.expanduser("~/.local/share/Steam/compatibilitytools.d")
+        try:
+            os.makedirs(path)
+        except FileExistsError:
+            pass
         releases_list = os.listdir(path)
 
         def check_proton_inf(current_rel):
