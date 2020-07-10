@@ -156,7 +156,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
 
         def bottom_button():
             button = Gtk.Button("Hide")
-            button.connect("clicked", self.on_destroy)
+            button.connect("clicked", self.on_hide)
             button.set_halign(Gtk.Align.END)
             button.set_margin_top(5)
             return button
@@ -171,7 +171,7 @@ class ReleaseSelector(Gtk.ApplicationWindow):
         box.pack_end(bottom_button(), False, False, 0)
         return box
 
-    def on_destroy(self, args):
+    def on_hide(self, args):
         self.hide()
 
 
