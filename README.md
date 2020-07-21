@@ -1,5 +1,7 @@
 Short description:
 this app is mainly made for distro hoppers or new people that don't know all of GaMiNg stuff on Linux distributions. This app aims to help those ppl and also help distro hoppers.
+This program was made as a quick project to learn from ! I won't make any major updates anymore since things in this program are easier done by a cli program
+(https://github.com/Klairm/Linux-Gaming-Setup).
                                                                                                                                     
                                                                                                                                                                                                                                                                         
 ![Image of the app](https://i.imgur.com/cLfzA6b.png)
